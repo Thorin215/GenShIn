@@ -4,17 +4,17 @@
       type="success"
     >
       <p>账户ID: {{ accountId }}</p>
-      <p>用户名: {{ userName }}</p>
-      <p>余额: ￥{{ balance }} 元</p>
+      <!-- <p>用户名: {{ userName }}</p>
+      <p>余额: ￥{{ balance }} 元</p> -->
       <!-- <p>当发起出售、捐赠或质押操作后，担保状态为true</p>
       <p>当担保状态为false时，才可发起出售、捐赠或质押操作</p> -->
     </el-alert>
-    <div v-if="realEstateList.length==0" style="text-align: center;">
+    <!-- <div v-if="realEstateList.length==0" style="text-align: center;">
       <el-alert
         title="查询不到数据"
         type="warning"
       />
-    </div>
+    </div> -->
     <el-row v-loading="loading" :gutter="20">
       <el-col v-for="(val,index) in realEstateList" :key="index" :span="6" :offset="1">
         <el-card class="realEstate-card">

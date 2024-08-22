@@ -16,10 +16,6 @@
         <el-input v-model="uploadForm.dataset_id" placeholder="输入数据集编号"></el-input>
       </el-form-item>
 
-      <el-form-item label="句子编号" prop="sentence_id">
-        <el-input v-model="uploadForm.sentence_id" placeholder="输入句子编号"></el-input>
-      </el-form-item>
-
       <el-form-item>
         <el-button type="primary" @click="submitForm">上传数据</el-button>
         <el-button @click="resetForm">重置</el-button>
@@ -38,8 +34,7 @@ export default {
       uploadForm: {
         sentence: '',
         label: null,
-        dataset_id: '',
-        sentence_id: ''
+        dataset_id: ''
       },
       loading: false
     }
@@ -51,8 +46,9 @@ export default {
           this.loading = true
           try {
             const response = await uploadSentence(this.uploadForm)
-            if (response.data) {
-              this.$message.success('数据上传成功!')
+            //解析不了msg
+            if (response.sentence_id) {
+              this.$message.success(`数据上传成功! SentenceID :` + response.sentence_id)
             } else {
               this.$message.error('数据上传失败!')
             }
