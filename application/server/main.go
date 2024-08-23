@@ -9,7 +9,16 @@ import (
 	"application/blockchain"
 	"application/pkg/cron"
 	"application/routers"
+	"application/setting"
+	"application/sql"
+	"github.com/jinzhu/gorm"
 )
+
+const DBfile = "./conf/config.ini"
+
+type TestData struct {
+	gorm.Model
+}
 
 func main() {
 	timeLocal, err := time.LoadLocation("Asia/Shanghai")
@@ -17,6 +26,16 @@ func main() {
 		log.Printf("时区设置失败 %s", err)
 	}
 	time.Local = timeLocal
+
+	if err:=setting.Init(DBfile);err!=nil{
+		log.Printf("配置数据库文件初始化失败 %s",err)
+		return
+	}
+
+	sql.InitMysql(setting.Conf.MysqlConfig);
+	
+
+	sql.DB.AutoMigrate(&TestData{})
 
 	blockchain.Init()
 	go cron.Init()
