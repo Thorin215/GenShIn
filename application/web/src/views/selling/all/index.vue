@@ -2,8 +2,8 @@
   <div class="container">
     <el-alert type="success">
       <p>账户ID: {{ accountId }}</p>
-      <p>用户名: {{ userName }}</p>
-      <p>余额: ￥{{ balance }} 元</p>
+      <!-- <p>用户名: {{ userName }}</p>
+      <p>余额: ￥{{ balance }} 元</p> -->
     </el-alert>
 
     <!-- 新增部分 -->
@@ -25,13 +25,13 @@
       </p>
     </div>
 
-    <div v-if="sellingList.length === 0" style="text-align: center;">
+    <!-- <div v-if="sellingList.length === 0" style="text-align: center;">
       <el-alert title="查询不到数据" type="warning" />
     </div>
     <el-row v-loading="loading" :gutter="20">
       <el-col v-for="(val, index) in sellingList" :key="index" :span="6" :offset="1">
-        <el-card class="all-card">
-          <div slot="header" class="clearfix">
+        <el-card class="all-card"> -->
+          <!-- <div slot="header" class="clearfix">
             <span>{{ val.sellingStatus }}</span>
             <el-button
               v-if="roles[0] !== 'admin' && (val.seller === accountId || val.buyer === accountId) && val.sellingStatus !== '完成' && val.sellingStatus !== '已过期' && val.sellingStatus !== '已取消'"
@@ -57,8 +57,8 @@
             >
               购买
             </el-button>
-          </div>
-          <div class="item">
+          </div> -->
+          <!-- <div class="item">
             <el-tag>房产ID: </el-tag>
             <span>{{ val.objectOfSale }}</span>
           </div>
@@ -69,23 +69,23 @@
           <div class="item">
             <el-tag type="danger">价格: </el-tag>
             <span>￥{{ val.price }} 元</span>
-          </div>
-          <div class="item">
+          </div> -->
+          <!-- <div class="item">
             <el-tag type="warning">有效期: </el-tag>
             <span>{{ val.salePeriod }} 天</span>
-          </div>
-          <div class="item">
+          </div> -->
+          <!-- <div class="item">
             <el-tag type="info">创建时间: </el-tag>
             <span>{{ val.createTime }}</span>
-          </div>
-          <div class="item">
+          </div> -->
+          <!-- <div class="item">
             <el-tag>购买者ID: </el-tag>
             <span v-if="val.buyer === ''">虚位以待</span>
             <span>{{ val.buyer }}</span>
-          </div>
-        </el-card>
+          </div> -->
+        <!-- </el-card>
       </el-col>
-    </el-row>
+    </el-row> -->
   </div>
 </template>
 
@@ -97,13 +97,15 @@ import { uploadSet } from '@/api/upload'
 export default {
   name: 'AllSelling',
   data() {
-    return {
-      loading: true,
-      sellingList: [],
-      newDatasetId: '',        // 用户输入的新数据集编号
-      createdDatasetId: ''     // 返回的创建的数据集编号
-    }
-  },
+  return {
+    loading: false,
+    sellingList: [],
+    newDatasetId: '',        // 用户输入的新数据集编号
+    createdDatasetId: '',    // 返回的创建的数据集编号
+    creationTime: '',        // 返回的创建时间
+    lastModified: ''         // 返回的最后修改时间
+  }
+},
   computed: {
     ...mapGetters([
       'accountId',
@@ -116,145 +118,52 @@ export default {
     this.fetchSellingList();
   },
   methods: {
-    fetchSellingList() {
-      querySellingList().then(response => {
-        if (response !== null) {
-          this.sellingList = response;
-        }
-        this.loading = false;
-      }).catch(error => {
-        this.loading = false;
-        this.$message({
-          type: 'error',
-          message: `查询数据时发生错误: ${error.message}`
-        });
-      });
-    },
-    createDataset() {
-      console.log('Create Dataset button clicked');
-      if (!this.newDatasetId) {
-        this.$message({
-          type: 'warning',
-          message: '数据集编号不能为空!'
-        })
-        return
-      }
-
-      this.loading = true
-      uploadSet({
-        dataset_id: this.newDatasetId,
-        account_id: this.accountId
-      }).then(response => {
-        console.log('Response:', response); // 调试输出
-        this.loading = false
-        if (response) {
-          // this.createdDatasetId = response.dataset_id
-          this.$message({
-            type: 'success',
-            message: '数据集创建成功!'
-          })
-        } else {
-          this.$message({
-            type: 'error',
-            message: '数据集编号重复! 请重试。'
-          })
-        }
-      }).catch(error => {
-        console.error('Error:', error); // 调试输出
-        this.loading = false
-        this.$message({
-          type: 'error',
-          message: `创建数据集时发生错误: ${error.message}`
-        })
+  createDataset() {
+    console.log('Create Dataset button clicked');
+    if (!this.newDatasetId) {
+      this.$message({
+        type: 'warning',
+        message: '数据集编号不能为空!'
       })
-    },
-    createSellingByBuy(item) {
-      this.$confirm('是否立即购买?', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'success'
-      }).then(() => {
-        this.loading = true;
-        createSellingByBuy({
-          buyer: this.accountId,
-          objectOfSale: item.objectOfSale,
-          seller: item.seller
-        }).then(response => {
-          this.loading = false;
-          if (response !== null) {
-            this.$message({
-              type: 'success',
-              message: '购买成功!'
-            });
-          } else {
-            this.$message({
-              type: 'error',
-              message: '购买失败!'
-            });
-          }
-          setTimeout(() => {
-            this.fetchSellingList();
-          }, 1000);
-        }).catch(error => {
-          this.loading = false;
-          this.$message({
-            type: 'error',
-            message: `购买操作时发生错误: ${error.message}`
-          });
-        });
-      }).catch(() => {
-        this.loading = false;
-        this.$message({
-          type: 'info',
-          message: '已取消购买'
-        });
-      });
-    },
-    updateSelling(item, type) {
-      const tip = type === 'done' ? '确认收款' : '取消操作';
-      this.$confirm(`是否要${tip}?`, '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'success'
-      }).then(() => {
-        this.loading = true;
-        updateSelling({
-          buyer: item.buyer,
-          objectOfSale: item.objectOfSale,
-          seller: item.seller,
-          status: type
-        }).then(response => {
-          this.loading = false;
-          if (response !== null) {
-            this.$message({
-              type: 'success',
-              message: `${tip}操作成功!`
-            });
-          } else {
-            this.$message({
-              type: 'error',
-              message: `${tip}操作失败!`
-            });
-          }
-          setTimeout(() => {
-            this.fetchSellingList();
-          }, 1000);
-        }).catch(error => {
-          this.loading = false;
-          this.$message({
-            type: 'error',
-            message: `更新销售状态时发生错误: ${error.message}`
-          });
-        });
-      }).catch(() => {
-        this.loading = false;
-        this.$message({
-          type: 'info',
-          message: `已取消${tip}`
-        });
-      });
+      return
     }
+
+    const currentTime = new Date().toISOString(); // 获取当前时间的 ISO 字符串
+
+    this.loading = true;
+    uploadSet({
+      dataset_id: this.newDatasetId,
+      account_id: this.accountId,
+      creation_time: currentTime // 传递创建时间
+    }).then(response => {
+      console.log('Response:', response); // 调试输出
+      this.loading = false;
+      if (response) {
+        // 更新创建的数据集编号和时间
+        this.createdDatasetId = response.dataset_id;
+        this.creationTime = response.creation_time;
+        this.lastModified = response.last_modified;
+
+        this.$message({
+          type: 'success',
+          message: `数据集创建成功! 创建时间: ${this.creationTime}, 最后修改时间: ${this.lastModified}`
+        });
+      } else {
+        this.$message({
+          type: 'error',
+          message: '数据集编号重复! 请重试。'
+        });
+      }
+    }).catch(error => {
+      console.error('Error:', error); // 调试输出
+      this.loading = false;
+      this.$message({
+        type: 'error',
+        message: `创建数据集时发生错误: ${error.message}`
+      });
+    });
   }
+}
 }
 </script>
 

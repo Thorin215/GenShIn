@@ -70,7 +70,7 @@ export const asyncRoutes = [
     name: 'Selling',
     alwaysShow: true,
     meta: {
-      title: '销售',
+      title: '新建',
       icon: 'selling'
     },
     children: [{
@@ -78,7 +78,7 @@ export const asyncRoutes = [
       name: 'SellingAll',
       component: () => import('@/views/selling/all/index'),
       meta: {
-        title: '所有销售',
+        title: '新建数据集',
         icon: 'sellingAll'
       }
     },
@@ -103,46 +103,46 @@ export const asyncRoutes = [
     }
     ]
   },
-  {
-    path: '/donating',
-    component: Layout,
-    redirect: '/donating/all',
-    name: 'Donating',
-    alwaysShow: true,
-    meta: {
-      title: '捐赠',
-      icon: 'donating'
-    },
-    children: [{
-      path: 'all',
-      name: 'DonatingAll',
-      component: () => import('@/views/donating/all/index'),
-      meta: {
-        title: '所有捐赠',
-        icon: 'donatingAll'
-      }
-    },
-    {
-      path: 'donor',
-      name: 'DonatingDonor',
-      component: () => import('@/views/donating/donor/index'),
-      meta: {
-        roles: ['editor'],
-        title: '我发起的捐赠',
-        icon: 'donatingDonor'
-      }
-    }, {
-      path: 'grantee',
-      name: 'DonatingGrantee',
-      component: () => import('@/views/donating/grantee/index'),
-      meta: {
-        roles: ['editor'],
-        title: '我收到的受赠',
-        icon: 'donatingGrantee'
-      }
-    }
-    ]
-  },
+  // {
+  //   path: '/donating',
+  //   component: Layout,
+  //   redirect: '/donating/all',
+  //   name: 'Donating',
+  //   alwaysShow: true,
+  //   meta: {
+  //     title: '捐赠',
+  //     icon: 'donating'
+  //   },
+  //   children: [{
+  //     path: 'all',
+  //     name: 'DonatingAll',
+  //     component: () => import('@/views/donating/all/index'),
+  //     meta: {
+  //       title: '所有捐赠',
+  //       icon: 'donatingAll'
+  //     }
+  //   },
+  //   {
+  //     path: 'donor',
+  //     name: 'DonatingDonor',
+  //     component: () => import('@/views/donating/donor/index'),
+  //     meta: {
+  //       roles: ['editor'],
+  //       title: '我发起的捐赠',
+  //       icon: 'donatingDonor'
+  //     }
+  //   }, {
+  //     path: 'grantee',
+  //     name: 'DonatingGrantee',
+  //     component: () => import('@/views/donating/grantee/index'),
+  //     meta: {
+  //       roles: ['editor'],
+  //       title: '我收到的受赠',
+  //       icon: 'donatingGrantee'
+  //     }
+  //   }
+  //   ]
+  // },
   {
     path: '/addRealestate',
     component: Layout,
