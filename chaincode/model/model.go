@@ -1,5 +1,70 @@
 package model
 
+// User 用户
+type User struct {
+	ID   int32  `json:"id"`   // 用户UID
+	Name string `json:"name"` // 用户名
+}
+
+// DatasetFile 数据集文件
+type DatasetFile struct {
+	ID       int32  `json:"id"`       // 数据集文件ID
+	FileName string `json:"filename"` // 文件名
+	Size     int64  `json:"size"`     // 文件大小
+	Hash     string `json:"hash"`     // 文件哈希
+}
+
+// DatasetMetadata 数据集元数据
+type DatasetMetadata struct {
+	Tasks      []string `json:"tasks"`      // 目标任务
+	Modalities []string `json:"modalities"` // 数据模态
+	Formats    []string `json:"formats"`    // 文件格式
+	SubTasks   []string `json:"sub_tasks"`  // 子任务
+	Languages  []string `json:"languages"`  // 语言
+	Libraries  []string `json:"libraries"`  // 适用库
+	Tags       []string `json:"tags"`       // 标签
+	License    string   `json:"license"`    // 许可证
+	Rows       int32    `json:"rows"`       // 行数
+}
+
+// DatasetVersion 数据集一个版本
+type DatasetVersion struct {
+	ID           int32   `json:"id"`            // 版本ID
+	CreationTime string  `json:"creation_time"` // 创建时间
+	ChangeLog    string  `json:"change_log"`    // 版本说明
+	Size         int64   `json:"size"`          // 版本大小
+	FilesID      []int32 `json:"files"`         // 文件ID列表
+}
+
+// Dataset 数据集
+type Dataset struct {
+	ID            int32           `json:"id"`             // 数据集ID
+	Name          string          `json:"name"`           // 数据集名
+	OwnerID       int32           `json:"owner_id"`       // 所有者ID
+	DownloadCount int32           `json:"download_count"` // 下载次数
+	StarCount     int32           `json:"star_count"`     // 收藏次数
+	Metadata      DatasetMetadata `json:"metadata"`       // 元数据
+	VersionsID    []int32         `json:"versions"`       // 版本ID列表
+}
+
+// DownloadRecord 下载记录
+type DownloadRecord struct {
+	FilesID []int32 `json:"files"` // 文件ID列表
+	UserID  int32   `json:"user"`  // 下载者ID
+	Time    string  `json:"time"`  // 下载时间
+}
+
+const (
+	UserIDKey         = "user-id"
+	UserKey           = "user"
+	DatasetFileKey    = "dataset-file"
+	DatasetVersionKey = "dataset-version"
+	DatasetKey        = "dataset"
+	DownloadRecordKey = "download-record"
+)
+
+////////////// LEGACY !
+
 // Account 账户，虚拟管理员和若干业主账号
 type Account struct {
 	AccountId string  `json:"accountId"` //账号ID
