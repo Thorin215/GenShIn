@@ -1,5 +1,11 @@
 package model
 
+import (
+	"time"
+
+	"gorm.io/gorm"
+)
+
 // Selling 销售要约
 // 需要确定ObjectOfSale是否属于Seller
 // 买家初始为空
@@ -45,15 +51,102 @@ var DonatingStatusConstant = func() map[string]string {
 	}
 }
 
-type TData_Language struct{
-    Context     string  `json:"context"`
-    Label       bool  `json:"label"`
-    SetNo      string `json:"setNo"`
+type TData_Language struct {
+	Context string `json:"context"`
+	Label   bool   `json:"label"`
+	SetNo   string `json:"setNo"`
 }
 
-type TData_Set struct{
-    SetNo       string `json:"setNo"`
-    SetDonor    string `json:"setDonor"`
-    SetSize     string `json:"setSize"`
-    SetNum      string `json:"setNum"`
+type TData_Set struct {
+	SetNo    string `json:"setNo"`
+	SetDonor string `json:"setDonor"`
+	SetSize  string `json:"setSize"`
+	SetNum   string `json:"setNum"`
+}
+
+type DataSet struct {
+	Name       string    `json:"name"`
+	AccountID  int       `json:"account_id" gorm:"primary_key"`
+	Stars      int       `json:"stars"`
+	DataSetID  int       `json:"dataset_id" gorm:"primary_key"`
+	CreateTime time.Time `json:"create_time"`
+	ModifyTime time.Time `json:"modified_time"`
+}
+
+type MetaData struct {
+	DataSetID  int      `json:"dataset_id" gorm:"primary_key"`
+	Tasks      []string `json:"tasks"`
+	Modalities []string `json:"modalities"`
+	Formats    []string `json:"formats"`
+	SubTasks   []string `json:"sub_tasks"`
+	Languages  []string `json:"languages"`
+	Libararies []string `json:"libraries"`
+	Tags       []string `json:"tags"`
+	License    string   `json:"license"`
+	Rows       int      `json:"rows"`
+}
+
+func CreateDataSet(dataSet *DataSet, metaData *MetaData) error {
+	error := DB.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Create(dataSet).Error; err != nil {
+			return err
+		}
+		if err := tx.Create(metaData).Error; err != nil {
+			return err
+		}
+		return nil
+	})
+}
+
+func GetDataSet(dataSetID int) (*DataSet, *MetaData, error) {
+	dataSet := &DataSet{}
+	metaData := &MetaData{}
+	err := DB.Where("dataset_id = ?", dataSetID).First(dataSet).Error
+	if err != nil {
+		return nil, nil, err
+	}
+	err = DB.Where("dataset_id = ?", dataSetID).First(metaData).Error
+	if err != nil {
+		return nil, nil, err
+	}
+	return dataSet, metaData, nil
+}
+
+func UpdateDataSet(dataSet *DataSet, metaData *MetaData) error {
+	error := DB.Save(dataSet).Save(metaData).Error
+	if error == nil {
+		DB.Model(&DataSet{}).Where("dataset_id = ?", dataSet.DataSetID).Update("modified_time", time.Now())
+	}
+	return error
+}
+
+func DeleteDataSet(dataSetID int) error {
+	error := DB.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Where("dataset_id = ?", dataSetID).Delete(&DataSet{}).Error; err != nil {
+			return err
+		}
+		if err := tx.Where("dataset_id = ?", dataSetID).Delete(&MetaData{}).Error; err != nil {
+			return err
+		}
+		return nil
+	})
+	return error
+}
+
+func GetDataSetList() ([]DataSet, error) {
+	dataSetList := []DataSet{}
+	err := DB.Find(&dataSetList).Error
+	if err != nil {
+		return nil, err
+	}
+	return dataSetList, nil
+}
+
+func GetDataSetListByName(name string) ([]DataSet, error) {
+	dataSetList := []DataSet{}
+	err := DB.Where("name = ?", name).Find(&dataSetList).Error
+	if err != nil {
+		return nil, error
+	}
+	return dataSetList, nil
 }
