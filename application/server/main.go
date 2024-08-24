@@ -11,7 +11,11 @@ import (
 	"application/routers"
 	"application/setting"
 	"application/sql"
-	"github.com/jinzhu/gorm"
+
+	// "github.com/jinzhu/gorm"
+	"application/model"
+
+	"gorm.io/gorm"
 )
 
 const DBfile = "./conf/config.ini"
@@ -27,15 +31,16 @@ func main() {
 	}
 	time.Local = timeLocal
 
-	if err:=setting.Init(DBfile);err!=nil{
-		log.Printf("配置数据库文件初始化失败 %s",err)
+	if err := setting.Init(DBfile); err != nil {
+		log.Printf("配置数据库文件初始化失败 %s", err)
 		return
 	}
 
-	sql.InitMysql(setting.Conf.MysqlConfig);
-	
+	sql.InitMysql(setting.Conf.MysqlConfig)
 
 	sql.DB.AutoMigrate(&TestData{})
+	sql.DB.AutoMigrate(&model.DataSet{})
+	sql.DB.AutoMigrate(&model.MetaData{})
 
 	blockchain.Init()
 	go cron.Init()

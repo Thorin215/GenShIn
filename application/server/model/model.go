@@ -1,6 +1,7 @@
 package model
 
 import (
+	"application/sql"
 	"time"
 
 	"gorm.io/gorm"
@@ -74,20 +75,20 @@ type DataSet struct {
 }
 
 type MetaData struct {
-	DataSetID  int      `json:"dataset_id" gorm:"primary_key"`
-	Tasks      []string `json:"tasks"`
-	Modalities []string `json:"modalities"`
-	Formats    []string `json:"formats"`
-	SubTasks   []string `json:"sub_tasks"`
-	Languages  []string `json:"languages"`
-	Libararies []string `json:"libraries"`
-	Tags       []string `json:"tags"`
-	License    string   `json:"license"`
-	Rows       int      `json:"rows"`
+	DataSetID  int    `json:"dataset_id" gorm:"primary_key"`
+	Tasks      string `json:"tasks"`
+	Modalities string `json:"modalities"`
+	Formats    string `json:"formats"`
+	SubTasks   string `json:"sub_tasks"`
+	Languages  string `json:"languages"`
+	Libararies string `json:"libraries"`
+	Tags       string `json:"tags"`
+	License    string `json:"license"`
+	Rows       int    `json:"rows"`
 }
 
 func CreateDataSet(dataSet *DataSet, metaData *MetaData) error {
-	error := DB.Transaction(func(tx *gorm.DB) error {
+	error := sql.DB.Transaction(func(tx *gorm.DB) error {
 		if err := tx.Create(dataSet).Error; err != nil {
 			return err
 		}
@@ -96,16 +97,17 @@ func CreateDataSet(dataSet *DataSet, metaData *MetaData) error {
 		}
 		return nil
 	})
+	return error
 }
 
 func GetDataSet(dataSetID int) (*DataSet, *MetaData, error) {
 	dataSet := &DataSet{}
 	metaData := &MetaData{}
-	err := DB.Where("dataset_id = ?", dataSetID).First(dataSet).Error
+	err := sql.DB.Where("dataset_id = ?", dataSetID).First(dataSet).Error
 	if err != nil {
 		return nil, nil, err
 	}
-	err = DB.Where("dataset_id = ?", dataSetID).First(metaData).Error
+	err = sql.DB.Where("dataset_id = ?", dataSetID).First(metaData).Error
 	if err != nil {
 		return nil, nil, err
 	}
@@ -113,15 +115,15 @@ func GetDataSet(dataSetID int) (*DataSet, *MetaData, error) {
 }
 
 func UpdateDataSet(dataSet *DataSet, metaData *MetaData) error {
-	error := DB.Save(dataSet).Save(metaData).Error
+	error := sql.DB.Save(dataSet).Save(metaData).Error
 	if error == nil {
-		DB.Model(&DataSet{}).Where("dataset_id = ?", dataSet.DataSetID).Update("modified_time", time.Now())
+		sql.DB.Model(&DataSet{}).Where("dataset_id = ?", dataSet.DataSetID).Update("modified_time", time.Now())
 	}
 	return error
 }
 
 func DeleteDataSet(dataSetID int) error {
-	error := DB.Transaction(func(tx *gorm.DB) error {
+	error := sql.DB.Transaction(func(tx *gorm.DB) error {
 		if err := tx.Where("dataset_id = ?", dataSetID).Delete(&DataSet{}).Error; err != nil {
 			return err
 		}
@@ -135,7 +137,7 @@ func DeleteDataSet(dataSetID int) error {
 
 func GetDataSetList() ([]DataSet, error) {
 	dataSetList := []DataSet{}
-	err := DB.Find(&dataSetList).Error
+	err := sql.DB.Find(&dataSetList).Error
 	if err != nil {
 		return nil, err
 	}
@@ -144,9 +146,9 @@ func GetDataSetList() ([]DataSet, error) {
 
 func GetDataSetListByName(name string) ([]DataSet, error) {
 	dataSetList := []DataSet{}
-	err := DB.Where("name = ?", name).Find(&dataSetList).Error
+	err := sql.DB.Where("name = ?", name).Find(&dataSetList).Error
 	if err != nil {
-		return nil, error
+		return nil, err
 	}
 	return dataSetList, nil
 }
