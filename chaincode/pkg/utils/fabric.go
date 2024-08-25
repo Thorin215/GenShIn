@@ -2,57 +2,88 @@ package utils
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 )
 
-// WriteLedger 写入账本
+// WriteLedgerS 写入账本，单主键
+func WriteLedgerS(obj interface{}, stub shim.ChaincodeStubInterface, objectType string, key string) error {
+	bytes, err := json.Marshal(obj)
+	if err != nil {
+		return fmt.Errorf("%s-序列化json数据失败出错: %s", objectType, err)
+	}
+	// 写入区块链账本
+	if err := stub.PutState(key, bytes); err != nil {
+		return fmt.Errorf("%s-写入区块链账本出错: %s", objectType, err)
+	}
+	return nil
+}
+
+// WriteLedger 写入账本，复合主键
 func WriteLedger(obj interface{}, stub shim.ChaincodeStubInterface, objectType string, keys []string) error {
-	//创建复合主键
+	// 创建复合主键
 	var key string
 	if val, err := stub.CreateCompositeKey(objectType, keys); err != nil {
-		return errors.New(fmt.Sprintf("%s-创建复合主键出错 %s", objectType, err))
+		return fmt.Errorf("%s-创建复合主键出错: %s", objectType, err)
 	} else {
 		key = val
 	}
 	bytes, err := json.Marshal(obj)
 	if err != nil {
-		return errors.New(fmt.Sprintf("%s-序列化json数据失败出错: %s", objectType, err))
+		return fmt.Errorf("%s-序列化json数据失败出错: %s", objectType, err)
 	}
-	//写入区块链账本
+	// 写入区块链账本
 	if err := stub.PutState(key, bytes); err != nil {
-		return errors.New(fmt.Sprintf("%s-写入区块链账本出错: %s", objectType, err))
+		return fmt.Errorf("%s-写入区块链账本出错: %s", objectType, err)
 	}
 	return nil
 }
 
-// DelLedger 删除账本
+// DelLedgerS 删除账本，单主键
+func DelLedgerS(stub shim.ChaincodeStubInterface, objectType string, key string) error {
+	// 写入区块链账本
+	if err := stub.DelState(key); err != nil {
+		return fmt.Errorf("%s-删除区块链账本出错: %s", objectType, err)
+	}
+	return nil
+}
+
+// DelLedger 删除账本，复合主键
 func DelLedger(stub shim.ChaincodeStubInterface, objectType string, keys []string) error {
-	//创建复合主键
+	// 创建复合主键
 	var key string
 	if val, err := stub.CreateCompositeKey(objectType, keys); err != nil {
-		return errors.New(fmt.Sprintf("%s-创建复合主键出错 %s", objectType, err))
+		return fmt.Errorf("%s-创建复合主键出错: %s", objectType, err)
 	} else {
 		key = val
 	}
-	//写入区块链账本
+	// 写入区块链账本
 	if err := stub.DelState(key); err != nil {
-		return errors.New(fmt.Sprintf("%s-删除区块链账本出错: %s", objectType, err))
+		return fmt.Errorf("%s-删除区块链账本出错: %s", objectType, err)
 	}
 	return nil
 }
 
+// GetStateByKey 根据主键查询数据
+func GetStateByKey(stub shim.ChaincodeStubInterface, objectType string, key string) ([]byte, error) {
+	// 通过主键从区块链查找相关的数据
+	bytes, err := stub.GetState(key)
+	if err != nil {
+		return nil, fmt.Errorf("%s-获取数据出错: %s", objectType, err)
+	}
+	return bytes, nil
+}
+
 // GetStateByPartialCompositeKeys 根据复合主键查询数据(适合获取全部，多个，单个数据)
-// 将keys拆分查询
+// 将 keys 拆分查询
 func GetStateByPartialCompositeKeys(stub shim.ChaincodeStubInterface, objectType string, keys []string) (results [][]byte, err error) {
 	if len(keys) == 0 {
 		// 传入的keys长度为0，则查找并返回所有数据
 		// 通过主键从区块链查找相关的数据，相当于对主键的模糊查询
 		resultIterator, err := stub.GetStateByPartialCompositeKey(objectType, keys)
 		if err != nil {
-			return nil, errors.New(fmt.Sprintf("%s-获取全部数据出错: %s", objectType, err))
+			return nil, fmt.Errorf("%s-获取全部数据出错: %s", objectType, err)
 		}
 		defer resultIterator.Close()
 
@@ -60,7 +91,7 @@ func GetStateByPartialCompositeKeys(stub shim.ChaincodeStubInterface, objectType
 		for resultIterator.HasNext() {
 			val, err := resultIterator.Next()
 			if err != nil {
-				return nil, errors.New(fmt.Sprintf("%s-返回的数据出错: %s", objectType, err))
+				return nil, fmt.Errorf("%s-返回的数据出错: %s", objectType, err)
 			}
 
 			results = append(results, val.GetValue())
@@ -71,12 +102,12 @@ func GetStateByPartialCompositeKeys(stub shim.ChaincodeStubInterface, objectType
 			// 创建组合键
 			key, err := stub.CreateCompositeKey(objectType, []string{v})
 			if err != nil {
-				return nil, errors.New(fmt.Sprintf("%s-创建组合键出错: %s", objectType, err))
+				return nil, fmt.Errorf("%s-创建组合键出错: %s", objectType, err)
 			}
 			// 从账本中获取数据
 			bytes, err := stub.GetState(key)
 			if err != nil {
-				return nil, errors.New(fmt.Sprintf("%s-获取数据出错: %s", objectType, err))
+				return nil, fmt.Errorf("%s-获取数据出错: %s", objectType, err)
 			}
 
 			if bytes != nil {
@@ -88,12 +119,13 @@ func GetStateByPartialCompositeKeys(stub shim.ChaincodeStubInterface, objectType
 	return results, nil
 }
 
-// GetStateByPartialCompositeKeys2 根据复合主键查询数据(适合获取全部或指定的数据)
+// GetStateByPartialCompositeKeys2 根据复合主键查询数据
+// 将 keys 拼接查询
 func GetStateByPartialCompositeKeys2(stub shim.ChaincodeStubInterface, objectType string, keys []string) (results [][]byte, err error) {
 	// 通过主键从区块链查找相关的数据，相当于对主键的模糊查询
 	resultIterator, err := stub.GetStateByPartialCompositeKey(objectType, keys)
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf("%s-获取全部数据出错: %s", objectType, err))
+		return nil, fmt.Errorf("%s-获取全部数据出错: %s", objectType, err)
 	}
 	defer resultIterator.Close()
 
@@ -101,7 +133,7 @@ func GetStateByPartialCompositeKeys2(stub shim.ChaincodeStubInterface, objectTyp
 	for resultIterator.HasNext() {
 		val, err := resultIterator.Next()
 		if err != nil {
-			return nil, errors.New(fmt.Sprintf("%s-返回的数据出错: %s", objectType, err))
+			return nil, fmt.Errorf("%s-返回的数据出错: %s", objectType, err)
 		}
 
 		results = append(results, val.GetValue())
