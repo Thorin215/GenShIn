@@ -84,16 +84,13 @@ func CreateUser(stub shim.ChaincodeStubInterface, args []string) pb.Response {
 	if err := model.ValidateUser(user); err != nil {
 		return shim.Error(fmt.Sprintf("CreateUser-参数错误: %s", err))
 	}
-
-	existing, err := checkUserExist(stub, userID)
-	if err != nil {
+	if existing, err := checkUserExist(stub, userID); err != nil {
 		return shim.Error(err.Error())
-	}
-	if existing {
+	} else if existing {
 		return shim.Error("CreateUser-用户已存在")
 	}
 
-	if err = utils.WriteLedgerS(user, stub, model.UserKey, strings.ToLower(userID)); err != nil {
+	if err := utils.WriteLedgerS(user, stub, model.UserKey, strings.ToLower(userID)); err != nil {
 		return shim.Error(fmt.Sprintf("CreateUser-写入账本出错: %s", err))
 	}
 	return shim.Success(nil)
