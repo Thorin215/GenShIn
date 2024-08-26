@@ -25,7 +25,7 @@ export default {
   data() {
     return {
       title: '基于区块链的AI训练数据共享系统',
-      logo: 'https://s1.ax1x.com/2020/03/18/8w22rj.png'
+      logo: 'favicon.png'
     }
   }
 }

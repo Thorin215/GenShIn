@@ -85,7 +85,11 @@ $light_gray:#eee;
 .login-container {
   min-height: 100%;
   width: 100%;
-  background-color: $bg;
+  background: url('https://c7k8t9m10.github.io/medias/featureimages/8.jpg');
+  width:100%;
+  height:100%;
+  position:fixed;
+  background-size:100% 100%;
   overflow: hidden;
 
   .login-form {
@@ -100,7 +104,7 @@ $light_gray:#eee;
    padding: 20px 0px 30px 0px;
    min-height: 100%;
    width: 100%;
-   background-color: $bg;
+   background-color: transparent;
    overflow: hidden;
    text-align: center;
   }
