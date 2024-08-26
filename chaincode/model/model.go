@@ -39,8 +39,8 @@ type DatasetVersion struct {
 
 // Dataset 数据集
 type Dataset struct {
-	Name  string `json:"name"`  // 数据集名
 	Owner string `json:"owner"` // 所有者ID
+	Name  string `json:"name"`  // 数据集名
 	// key = Owner#Name
 	Downloads int32 `json:"downloads"` // 下载次数
 	Stars     int32 `json:"stars"`     // 收藏次数
@@ -59,15 +59,10 @@ type DownloadRecord struct {
 const (
 	UserKey                  = "user"
 	DatasetFileKey           = "dataset-file"
-	DatasetVersionKey        = "dataset-version"
 	DatasetKey               = "dataset"
 	DownloadRecordUserKey    = "download-record-user"
 	DownloadRecordDatasetKey = "download-record-dataset"
 )
-
-func GetDatasetKey(dataset Dataset) string {
-	return dataset.Owner + "#" + dataset.Name
-}
 
 ////////////// LEGACY !
 

@@ -132,6 +132,18 @@ func GetStateByKey(stub shim.ChaincodeStubInterface, objectType string, key stri
 	return bytes, nil
 }
 
+func GetStateByCompositeKey(stub shim.ChaincodeStubInterface, objectType string, keys []string) ([]byte, error) {
+	key, err := stub.CreateCompositeKey(objectType, keys)
+	if err != nil {
+		return nil, fmt.Errorf("%s-创建组合键出错: %s", objectType, err)
+	}
+	bytes, err := stub.GetState(key)
+	if err != nil {
+		return nil, fmt.Errorf("%s-获取数据出错: %s", objectType, err)
+	}
+	return bytes, nil
+}
+
 // GetStateByObjectType 根据对象类型查询数据
 func GetStateByObjectType(stub shim.ChaincodeStubInterface, objectType string) (results [][]byte, err error) {
 	// 通过主键从区块链查找相关的数据，相当于对主键的模糊查询

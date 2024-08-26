@@ -66,7 +66,7 @@ func ValidateVersion(version DatasetVersion) error {
 	return nil
 }
 func ValidateDataset(dataset Dataset) error {
-	// Dataset Name: 1-64 characters
+	// Dataset Name: 1-64 characters [only letters, numbers, and underscores]
 	// Owner ID: existing user [3-16 characters, only letters, numbers, and underscores]
 
 	if len(dataset.Name) < 1 || len(dataset.Name) > 64 {
@@ -74,6 +74,9 @@ func ValidateDataset(dataset Dataset) error {
 	}
 	if len(dataset.Owner) < 3 || len(dataset.Owner) > 16 {
 		return errors.New("Owner ID must be between 3 and 16 characters")
+	}
+	if !regexp.MustCompile(`^[a-zA-Z0-9_]+$`).MatchString(dataset.Name) {
+		return errors.New("Dataset Name must contain only letters, numbers, and underscores")
 	}
 	if !regexp.MustCompile(`^[a-zA-Z0-9_]+$`).MatchString(dataset.Owner) {
 		return errors.New("Owner ID must contain only letters, numbers, and underscores")
