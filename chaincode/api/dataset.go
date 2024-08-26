@@ -133,3 +133,112 @@ func QueryDatasetList(stub shim.ChaincodeStubInterface, args []string) pb.Respon
 
 	return shim.Success(datasetsByte)
 }
+
+// UpdateDatasetVersions 更新数据集版本
+// args[0]: 所有者ID string
+// args[1]: 数据集名字 string
+// args[2]: 版本列表 string, []DatasetVersion as JSON
+func UpdateDatasetVersions(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+	if len(args) != 3 {
+		return shim.Error("UpdateDatasetVersions-参数数量错误")
+	}
+
+	if exist, err := checkDatasetExist(stub, args[0], args[1]); err != nil {
+		return shim.Error(fmt.Sprintf("UpdateDatasetVersions-查询数据集出错: %s", err))
+	} else if !exist {
+		return shim.Error("UpdateDatasetVersions-参数错误: 数据集不存在")
+	}
+
+	dataset, err := getDataset(stub, args[0], args[1])
+	if err != nil {
+		return shim.Error(fmt.Sprintf("UpdateDatasetVersions-查询数据集出错: %s", err))
+	}
+
+	var versions []model.DatasetVersion
+	if err := json.Unmarshal([]byte(args[2]), &versions); err != nil {
+		return shim.Error(fmt.Sprintf("UpdateDatasetVersions-反序列化出错: %s", err))
+	}
+
+	dataset.Versions = versions
+	if err := model.ValidateDataset(dataset); err != nil {
+		return shim.Error(fmt.Sprintf("UpdateDatasetVersions-参数错误: %s", err))
+	}
+
+	if err := utils.WriteLedger(dataset, stub, model.DatasetKey, []string{dataset.Owner, dataset.Name}); err != nil {
+		return shim.Error(fmt.Sprintf("UpdateDatasetVersions-写入账本出错: %s", err))
+	}
+	return shim.Success(nil)
+}
+
+// IncreaseDatasetStars 更新数据集点赞数
+// args[0]: 所有者ID string
+// args[1]: 数据集名字 string
+// args[2]: 点赞数 int (default = 1)
+func IncreaseDatasetStars(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+	if len(args) != 2 && len(args) != 3 {
+		return shim.Error("IncreaseDatasetStars-参数数量错误")
+	}
+
+	if exist, err := checkDatasetExist(stub, args[0], args[1]); err != nil {
+		return shim.Error(fmt.Sprintf("IncreaseDatasetStars-查询数据集出错: %s", err))
+	} else if !exist {
+		return shim.Error("IncreaseDatasetStars-参数错误: 数据集不存在")
+	}
+
+	dataset, err := getDataset(stub, args[0], args[1])
+	if err != nil {
+		return shim.Error(fmt.Sprintf("IncreaseDatasetStars-查询数据集出错: %s", err))
+	}
+
+	if len(args) == 2 {
+		dataset.Stars++
+	} else {
+		stars := utils.Str2Int32(args[2])
+		if stars <= 0 {
+			return shim.Error("IncreaseDatasetStars-参数错误: 必须为正整数")
+		}
+
+		dataset.Stars += stars
+	}
+
+	if err := utils.WriteLedger(dataset, stub, model.DatasetKey, []string{dataset.Owner, dataset.Name}); err != nil {
+		return shim.Error(fmt.Sprintf("IncreaseDatasetStars-写入账本出错: %s", err))
+	}
+	return shim.Success(nil)
+}
+
+// IncreaseDatasetDownloads 更新数据集下载数
+// args[0]: 所有者ID string
+// args[1]: 数据集名字 string
+// args[2]: 下载数 int (default = 1)
+func IncreaseDatasetDownloads(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+	if len(args) != 2 && len(args) != 3 {
+		return shim.Error("IncreaseDatasetDownloads-参数数量错误")
+	}
+
+	if exist, err := checkDatasetExist(stub, args[0], args[1]); err != nil {
+		return shim.Error(fmt.Sprintf("IncreaseDatasetDownloads-查询数据集出错: %s", err))
+	} else if !exist {
+		return shim.Error("IncreaseDatasetDownloads-参数错误: 数据集不存在")
+	}
+
+	dataset, err := getDataset(stub, args[0], args[1])
+	if err != nil {
+		return shim.Error(fmt.Sprintf("IncreaseDatasetDownloads-查询数据集出错: %s", err))
+	}
+
+	if len(args) == 2 {
+		dataset.Downloads++
+	} else {
+		downloads := utils.Str2Int32(args[2])
+		if downloads <= 0 {
+			return shim.Error("IncreaseDatasetDownloads-参数错误: 必须为正整数")
+		}
+		dataset.Downloads += downloads
+	}
+
+	if err := utils.WriteLedger(dataset, stub, model.DatasetKey, []string{dataset.Owner, dataset.Name}); err != nil {
+		return shim.Error(fmt.Sprintf("IncreaseDatasetDownloads-写入账本出错: %s", err))
+	}
+	return shim.Success(nil)
+}

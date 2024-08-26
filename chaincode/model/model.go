@@ -39,21 +39,21 @@ type DatasetVersion struct {
 
 // Dataset 数据集
 type Dataset struct {
-	Owner string `json:"owner"` // 所有者ID
-	Name  string `json:"name"`  // 数据集名
-	// key = Owner#Name
-	Downloads int32 `json:"downloads"` // 下载次数
-	Stars     int32 `json:"stars"`     // 收藏次数
+	Owner     string `json:"owner"`     // 所有者ID
+	Name      string `json:"name"`      // 数据集名
+	Downloads int32  `json:"downloads"` // 下载次数
+	Stars     int32  `json:"stars"`     // 收藏次数
 	// Metadata  DatasetMetadata  `json:"metadata"`  // 元数据
 	Versions []DatasetVersion `json:"versions"` // 版本列表
 }
 
 // DownloadRecord 下载记录
 type DownloadRecord struct {
-	Dataset string   `json:"dataset"` // 数据集 Key
-	Files   []string `json:"files"`   // 文件哈希列表
-	User    string   `json:"user"`    // 下载者ID
-	Time    string   `json:"time"`    // 下载时间
+	DatasetOwner string   `json:"dataset_owner"` // 数据集所有者
+	DatasetName  string   `json:"dataset_name"`  // 数据集名
+	User         string   `json:"user"`          // 下载者ID
+	Files        []string `json:"files"`         // 文件哈希列表
+	Time         string   `json:"time"`          // 下载时间
 }
 
 const (
