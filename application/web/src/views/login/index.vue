@@ -1,7 +1,9 @@
 <template>
   <div class="login-container">
     <el-form ref="loginForm" class="login-form" auto-complete="on" label-position="left">
-
+      <div class="example">
+        <h1 class='subtitle'>GenShIn</h1>
+      </div>
       <div class="title-container">
         <h3 class="title">基于区块链的AI训练数据共享系统</h3>
       </div>
@@ -85,9 +87,22 @@ $light_gray:#eee;
 .login-container {
   min-height: 100%;
   width: 100%;
-  background-color: $bg;
+  background: url('https://c7k8t9m10.github.io/medias/featureimages/8.jpg');
+  width:100%;
+  height:100%;
+  position:fixed;
+  background-size:100% 100%;
   overflow: hidden;
-
+  .example {
+  font-family: 'alarm_clockregular', sans-serif;
+  .subtitle {
+      font-size: 30px;
+      color: #000000;
+      margin: 0px auto 40px auto;
+      text-align: center;
+      font-weight: bold;
+    }
+   }
   .login-form {
     position: relative;
     width: 520px;
@@ -100,7 +115,7 @@ $light_gray:#eee;
    padding: 20px 0px 30px 0px;
    min-height: 100%;
    width: 100%;
-   background-color: $bg;
+   background-color: transparent;
    overflow: hidden;
    text-align: center;
   }
