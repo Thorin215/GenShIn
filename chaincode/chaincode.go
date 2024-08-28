@@ -60,6 +60,8 @@ func (t *BlockChainGenshin) Invoke(stub shim.ChaincodeStubInterface) pb.Response
 		return api.CreateFile(stub, args)
 	case "queryFile":
 		return api.QueryFile(stub, args)
+	case "queryMultipleFiles":
+		return api.QueryMultipleFiles(stub, args)
 	case "createDownloadRecord":
 		return api.CreateDownloadRecord(stub, args)
 	case "queryDownloadRecordListByUser":

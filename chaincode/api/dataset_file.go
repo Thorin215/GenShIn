@@ -16,7 +16,7 @@ func getFile(stub shim.ChaincodeStubInterface, fileHash string) (model.DatasetFi
 		return model.DatasetFile{}, fmt.Errorf("getFile-查询文件出错: %s", err)
 	}
 	if fileByte == nil {
-		return model.DatasetFile{}, fmt.Errorf("getFile-文件不存在")
+		return model.DatasetFile{}, fmt.Errorf("getFile-文件不存在: %s", fileHash)
 	}
 	var file model.DatasetFile
 	err = json.Unmarshal(fileByte, &file)
@@ -82,4 +82,35 @@ func QueryFile(stub shim.ChaincodeStubInterface, args []string) pb.Response {
 	}
 
 	return shim.Success(fileByte)
+}
+
+// QueryMultipleFiles 查询多个文件信息
+// args[0]: 文件Hash []string as JSON
+// return: []DatasetFile as JSON
+func QueryMultipleFiles(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+	if len(args) != 1 {
+		return shim.Error("QueryMultipleFiles-参数数量错误")
+	}
+
+	var fileHashes []string
+	err := json.Unmarshal([]byte(args[0]), &fileHashes)
+	if err != nil {
+		return shim.Error(fmt.Sprintf("QueryMultipleFiles-反序列化出错: %s", err))
+	}
+
+	var files []model.DatasetFile
+	for _, fileHash := range fileHashes {
+		file, err := getFile(stub, fileHash)
+		if err != nil {
+			return shim.Error(err.Error())
+		}
+		files = append(files, file)
+	}
+
+	filesByte, err := json.Marshal(files)
+	if err != nil {
+		return shim.Error(fmt.Sprintf("QueryMultipleFiles-序列化出错: %s", err))
+	}
+
+	return shim.Success(filesByte)
 }
