@@ -60,9 +60,11 @@ func CreateDataset(stub shim.ChaincodeStubInterface, args []string) pb.Response 
 	}
 
 	dataset := model.Dataset{
-		Owner:    args[0],
-		Name:     args[1],
-		Versions: versions,
+		Owner:     args[0],
+		Name:      args[1],
+		Downloads: 0,
+		Stars:     0,
+		Versions:  versions,
 	}
 	if err := model.ValidateDataset(dataset); err != nil {
 		return shim.Error(fmt.Sprintf("CreateDataset-参数错误: %s", err))
