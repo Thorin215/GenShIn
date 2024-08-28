@@ -42,7 +42,6 @@ func ValidateFile(file DatasetFile) error {
 func ValidateVersion(version DatasetVersion) error {
 	// Creation Time: ISO 8601
 	// Change Log: 0-1024 characters
-	// Size: positive integer
 	// Rows: non-negative integer
 	// Files: list of SHA-256 hashes
 
@@ -51,9 +50,6 @@ func ValidateVersion(version DatasetVersion) error {
 	}
 	if len(version.ChangeLog) < 0 || len(version.ChangeLog) > 1024 {
 		return errors.New("Change Log must be between 0 and 1024 characters")
-	}
-	if version.Size <= 0 {
-		return errors.New("Size must be a positive integer")
 	}
 	if version.Rows < 0 {
 		return errors.New("Rows must be a non-negative integer")
