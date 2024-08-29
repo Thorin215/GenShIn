@@ -32,7 +32,6 @@ type DatasetMetadata struct {
 type DatasetVersion struct {
 	CreationTime string   `json:"creation_time"` // 创建时间
 	ChangeLog    string   `json:"change_log"`    // 版本说明
-	Size         int64    `json:"size"`          // 版本大小
 	Rows         int32    `json:"rows"`          // 行数
 	Files        []string `json:"files"`         // 文件哈希列表
 }

@@ -60,9 +60,11 @@ func CreateDataset(stub shim.ChaincodeStubInterface, args []string) pb.Response 
 	}
 
 	dataset := model.Dataset{
-		Owner:    args[0],
-		Name:     args[1],
-		Versions: versions,
+		Owner:     args[0],
+		Name:      args[1],
+		Downloads: 0,
+		Stars:     0,
+		Versions:  versions,
 	}
 	if err := model.ValidateDataset(dataset); err != nil {
 		return shim.Error(fmt.Sprintf("CreateDataset-参数错误: %s", err))
@@ -72,6 +74,17 @@ func CreateDataset(stub shim.ChaincodeStubInterface, args []string) pb.Response 
 		return shim.Error(fmt.Sprintf("CreateDataset-查询数据集出错: %s", err))
 	} else if exist {
 		return shim.Error("CreateDataset-数据集已存在")
+	}
+
+	/* ensure all files exist */
+	for _, version := range dataset.Versions {
+		for _, fileHash := range version.Files {
+			if exist, err := checkFileExist(stub, fileHash); err != nil {
+				return shim.Error(fmt.Sprintf("CreateDataset-查询文件出错: %s", err))
+			} else if !exist {
+				return shim.Error(fmt.Sprintf("CreateDataset-参数错误: 文件不存在: %s", fileHash))
+			}
+		}
 	}
 
 	if err := utils.WriteLedger(dataset, stub, model.DatasetKey, []string{dataset.Owner, dataset.Name}); err != nil {
@@ -134,11 +147,11 @@ func QueryDatasetList(stub shim.ChaincodeStubInterface, args []string) pb.Respon
 	return shim.Success(datasetsByte)
 }
 
-// UpdateDatasetVersions 更新数据集版本
+// AppendDatasetVersion 添加数据集版本
 // args[0]: 所有者ID string
 // args[1]: 数据集名字 string
-// args[2]: 版本列表 string, []DatasetVersion as JSON
-func UpdateDatasetVersions(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+// args[2]: 版本(单个) string, DatasetVersion as JSON
+func AppendDatasetVersion(stub shim.ChaincodeStubInterface, args []string) pb.Response {
 	if len(args) != 3 {
 		return shim.Error("UpdateDatasetVersions-参数数量错误")
 	}
@@ -154,14 +167,23 @@ func UpdateDatasetVersions(stub shim.ChaincodeStubInterface, args []string) pb.R
 		return shim.Error(fmt.Sprintf("UpdateDatasetVersions-查询数据集出错: %s", err))
 	}
 
-	var versions []model.DatasetVersion
-	if err := json.Unmarshal([]byte(args[2]), &versions); err != nil {
+	var version model.DatasetVersion
+	if err := json.Unmarshal([]byte(args[2]), &version); err != nil {
 		return shim.Error(fmt.Sprintf("UpdateDatasetVersions-反序列化出错: %s", err))
 	}
 
-	dataset.Versions = versions
+	dataset.Versions = append(dataset.Versions, version)
 	if err := model.ValidateDataset(dataset); err != nil {
 		return shim.Error(fmt.Sprintf("UpdateDatasetVersions-参数错误: %s", err))
+	}
+
+	/* ensure all files exist */
+	for _, fileHash := range version.Files {
+		if exist, err := checkFileExist(stub, fileHash); err != nil {
+			return shim.Error(fmt.Sprintf("UpdateDatasetVersions-查询文件出错: %s", err))
+		} else if !exist {
+			return shim.Error(fmt.Sprintf("UpdateDatasetVersions-参数错误: 文件不存在: %s", fileHash))
+		}
 	}
 
 	if err := utils.WriteLedger(dataset, stub, model.DatasetKey, []string{dataset.Owner, dataset.Name}); err != nil {
