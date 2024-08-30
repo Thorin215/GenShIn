@@ -39,6 +39,26 @@ func CreateDownloadRecord(stub shim.ChaincodeStubInterface, args []string) pb.Re
 		return shim.Error(fmt.Sprintf("CreateDownloadRecord-参数错误: %s", err))
 	}
 
+	if exist, err := checkUserExist(stub, record.User); err != nil {
+		return shim.Error(fmt.Sprintf("CreateDownloadRecord-查询用户出错: %s", err))
+	} else if !exist {
+		return shim.Error(fmt.Sprintf("CreateDownloadRecord-参数错误: 用户不存在: %s", record.User))
+	}
+
+	if exist, err := checkDatasetExist(stub, record.DatasetOwner, record.DatasetName); err != nil {
+		return shim.Error(fmt.Sprintf("CreateDownloadRecord-查询数据集出错: %s", err))
+	} else if !exist {
+		return shim.Error(fmt.Sprintf("CreateDownloadRecord-参数错误: 数据集不存在: %s/%s", record.DatasetOwner, record.DatasetName))
+	}
+
+	for _, fileHash := range record.Files {
+		if exist, err := checkFileExist(stub, fileHash); err != nil {
+			return shim.Error(fmt.Sprintf("CreateDownloadRecord-查询文件出错: %s", err))
+		} else if !exist {
+			return shim.Error(fmt.Sprintf("CreateDownloadRecord-参数错误: 文件不存在: %s", fileHash))
+		}
+	}
+
 	keyDataset := []string{strings.ToLower(record.DatasetOwner), strings.ToLower(record.DatasetName), strings.ToLower(record.User)}
 	keyUser := []string{strings.ToLower(record.User), strings.ToLower(record.DatasetOwner), strings.ToLower(record.DatasetName)}
 
