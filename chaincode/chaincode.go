@@ -17,11 +17,11 @@ func (t *BlockChainGenshin) Init(stub shim.ChaincodeStubInterface) pb.Response {
 	fmt.Println("链码初始化")
 	// 初始化默认数据
 	var userIds = [3]string{
-		"test_user1",
-		"test_user2",
+		"user1",
+		"user2",
 		"admin",
 	}
-	var userNames = [3]string{"TestUser1", "TestUser2", "Admin"}
+	var userNames = [3]string{"User1", "User2", "Admin"}
 	// 初始化账号数据
 	for i, val := range userIds {
 		// 写入账本
