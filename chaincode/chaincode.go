@@ -44,6 +44,8 @@ func (t *BlockChainGenshin) Invoke(stub shim.ChaincodeStubInterface) pb.Response
 		return api.ModifyUserName(stub, args)
 	case "queryUserList":
 		return api.QueryUserList(stub, args)
+	case "queryUser":
+		return api.QueryUser(stub, args)
 	case "createDataset":
 		return api.CreateDataset(stub, args)
 	case "queryDataset":
