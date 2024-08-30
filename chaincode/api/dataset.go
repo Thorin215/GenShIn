@@ -48,7 +48,7 @@ func CreateDataset(stub shim.ChaincodeStubInterface, args []string) pb.Response 
 		return shim.Error("CreateDataset-参数数量错误")
 	}
 
-	if exist, err := checkUserExist(stub, args[1]); err != nil {
+	if exist, err := checkUserExist(stub, args[0]); err != nil {
 		return shim.Error(fmt.Sprintf("CreateDataset-查询用户出错: %s", err))
 	} else if !exist {
 		return shim.Error("CreateDataset-参数错误: 用户不存在")
