@@ -10,12 +10,12 @@
       <el-select v-model="value" placeholder="请选择用户角色" class="login-select" @change="selectGet">
         <el-option
           v-for="item in accountList"
-          :key="item.accountId"
-          :label="item.userName"
-          :value="item.accountId"
+          :key="item.id"
+          :label="item.name"
+          :value="item.id"
         >
-          <span style="float: left">{{ item.userName }}</span>
-          <span style="float: right; color: #8492a6; font-size: 13px">{{ item.accountId }}</span>
+          <span style="float: left">{{ item.name }}</span>
+          <span style="float: right; color: #8492a6; font-size: 13px">{{ item.id }}</span>
         </el-option>
       </el-select>
 
@@ -52,9 +52,9 @@ export default {
   },
   created() {
     queryAccountList().then(response => {
-      if (response !== null) {
+      if (response) {
         this.accountList = response
-        this.$message('寄')
+        this.$message('数据加载成功')
       }
     })
   },
@@ -69,7 +69,7 @@ export default {
           this.loading = false
         })
       } else {
-        this.$message('请输入密码')
+        this.$message('请选择用户角色')
       }
     },
     selectGet(accountId) {
