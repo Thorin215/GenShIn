@@ -161,6 +161,12 @@ func Test_User(t *testing.T) {
 		string(checkInvoke(t, stub, true, [][]byte{
 			[]byte("queryUserList"),
 		}).Payload))
+
+	fmt.Printf("\n8: QueryUser [success]\n%s",
+		string(checkInvoke(t, stub, true, [][]byte{
+			[]byte("queryUser"),
+			[]byte("test_user1"),
+		}).Payload))
 }
 
 func ToJson(v interface{}) []byte {

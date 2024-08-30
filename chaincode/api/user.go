@@ -66,6 +66,28 @@ func QueryUserList(stub shim.ChaincodeStubInterface, args []string) pb.Response 
 	return shim.Success(usersByte)
 }
 
+// QueryUser 查询用户
+// args[0]: 用户ID string
+// return: User as JSON
+func QueryUser(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+	if len(args) != 1 {
+		return shim.Error("QueryUser-参数数量错误")
+	}
+	userID := args[0]
+
+	user, err := getUser(stub, userID)
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+
+	userByte, err := json.Marshal(user)
+	if err != nil {
+		return shim.Error(fmt.Sprintf("QueryUser-序列化出错: %s", err))
+	}
+
+	return shim.Success(userByte)
+}
+
 // CreateUser 创建用户
 // args[0]: 用户ID string
 // args[1]: 用户名 string
