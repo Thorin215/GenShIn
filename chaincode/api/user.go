@@ -39,9 +39,9 @@ func checkUserExist(stub shim.ChaincodeStubInterface, userID string) (bool, erro
 // QueryUserList 查询用户列表
 // return: []User as JSON
 func QueryUserList(stub shim.ChaincodeStubInterface, args []string) pb.Response {
-	if len(args) != 0 {
-		return shim.Error("QueryUserList-参数数量错误")
-	}
+	// if len(args) != 0 {
+	// 	return shim.Error("QueryUserList-参数数量错误")
+	// }
 
 	res, err := utils.GetStateByObjectType(stub, model.UserKey)
 	if err != nil {
