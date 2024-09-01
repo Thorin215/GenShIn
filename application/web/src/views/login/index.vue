@@ -58,13 +58,13 @@ export default {
       }
     })
   },
+
   methods: {
     handleLogin() {
       if (this.value) {
         this.loading = true
-        this.$store.dispatch('account/login', this.value).then(() => {
-          this.$router.push({ path: this.redirect || '/' })
-          this.loading = false
+        this.$store.dispatch('account/login', this.value).then(path => {
+          this.$router.push({ path: path })
         }).catch(() => {
           this.loading = false
         })
@@ -78,6 +78,7 @@ export default {
   }
 }
 </script>
+
 
 <style lang="scss" scoped>
 $bg:#2d3a4b;
@@ -162,3 +163,34 @@ $light_gray:#eee;
   }
 }
 </style>
+
+// methods: {
+  // handleLogin() {
+  //     if (this.value) {
+  //       this.loading = true;
+  //       checkAccount(this.value).then(response => {
+  //         if (response) {
+  //           // this.$message('请选择用户角色' + response.id);
+  //           this.$store.dispatch('account/login', response).then(() => {
+  //             this.$message('登录成功');
+  //             this.$router.push({ path: this.redirect || '/' });
+  //             this.loading = false;
+  //           }).catch(() => {
+  //             this.loading = false;
+  //           });
+  //         } else {
+  //           this.$message(response.msg || '用户检查失败');
+  //           this.loading = false;
+  //         }
+  //       }).catch(() => {
+  //         this.loading = false;
+  //         this.$message('用户检查失败');
+  //       });
+  //     } else {
+  //       this.$message('请选择用户角色');
+  //     }
+  //   },
+  //   selectGet(accountId) {
+  //     this.value = accountId;
+  //   }
+  // }

@@ -59,7 +59,9 @@ import (
 )
 
 type AccountIdBody struct {
-	AccountId string `json:"accountId"`
+	//AccountId string `json:"accountId"`
+	ID  string `json:"id"`  // 用户ID
+	Name string `json:"name"` // 用户名
 }
 
 type AccountRequestBody struct {
@@ -77,9 +79,9 @@ func QueryAccountList(c *gin.Context) {
 
 	var bodyBytes [][]byte
 	for _, val := range body.Args {
-		bodyBytes = append(bodyBytes, []byte(val.AccountId))
+		bodyBytes = append(bodyBytes, []byte(val.ID))
 	}
-
+	
 	// 调用智能合约
 	//resp, err := bc.ChannelQuery("queryAccountList", bodyBytes)
 	resp, err := bc.ChannelQuery("queryUserList", bodyBytes)
@@ -97,4 +99,50 @@ func QueryAccountList(c *gin.Context) {
 
 	appG.Response(http.StatusOK, "成功", data)
 }
+
+// package api
+
+// import (
+// 	"fmt"
+// 	"net/http"
+
+// 	"github.com/gin-gonic/gin"
+// 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel"
+// 	"github.com/your_project/app"
+// )
+
+func CheckAccount(c *gin.Context) {
+	appG := app.Gin{C: c}
+	var body struct {
+		ID string `json:"id"`
+	}
+
+	// 解析 Body 参数
+	if err := c.ShouldBindJSON(&body); err != nil {
+		appG.Response(http.StatusBadRequest, "失败", fmt.Sprintf("参数出错: %s", err.Error()))
+		return
+	}
+
+	// 调用智能合约
+	resp, err := bc.ChannelQuery("queryUser", [][]byte{[]byte(body.ID)})
+	if err != nil {
+		appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("调用智能合约出错: %s", err.Error()))
+		return
+	}
+
+	// 检查返回的数据
+	var user map[string]interface{}
+	if err = json.Unmarshal(resp.Payload, &user); err != nil {
+		appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("反序列化出错: %s", err.Error()))
+		return
+	}
+
+	if len(user) == 0 {
+		appG.Response(http.StatusNotFound, "失败", "未找到该用户")
+		return
+	}
+
+	appG.Response(http.StatusOK, "成功", user)
+}
+
 

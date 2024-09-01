@@ -60,6 +60,7 @@ func InitRouter() *gin.Engine {
 	{
 		apiV1.GET("/hello", v1.Hello)
 		apiV1.POST("/queryAccountList", v1.QueryAccountList)
+		apiV1.POST("/checkAccount", v1.CheckAccount)
 		apiV1.POST("/createRealEstate", v1.CreateRealEstate)
 		apiV1.POST("/queryRealEstateList", v1.QueryRealEstateList)
 		apiV1.POST("/createSelling", v1.CreateSelling)
