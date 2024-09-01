@@ -72,8 +72,8 @@ export default {
         this.$message('请选择用户角色')
       }
     },
-    selectGet(accountId) {
-      this.value = accountId
+    selectGet(userId) {
+      this.value = userId
     }
   }
 }
@@ -190,7 +190,7 @@ $light_gray:#eee;
   //       this.$message('请选择用户角色');
   //     }
   //   },
-  //   selectGet(accountId) {
-  //     this.value = accountId;
+  //   selectGet(userId) {
+  //     this.value = userId;
   //   }
   // }

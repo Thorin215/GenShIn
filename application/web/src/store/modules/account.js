@@ -13,7 +13,7 @@ import {
 const getDefaultState = () => {
   return {
     token: getToken(),
-    accountId: '',
+    userId: '',
     userName: '',
     roles: []
   }
@@ -28,8 +28,8 @@ const mutations = {
   SET_TOKEN: (state, token) => {
     state.token = token
   },
-  SET_ACCOUNTID: (state, accountId) => {
-    state.accountId = accountId
+  SET_ACCOUNTID: (state, userId) => {
+    state.userId = userId
   },
   SET_USERNAME: (state, userName) => {
     state.userName = userName
@@ -42,15 +42,15 @@ const mutations = {
 const actions = {
   login({
     commit
-  }, accountId) {
+  }, userId) {
     return new Promise((resolve, reject) => {
       login({
         args: [{
-          id: accountId
+          id: userId
         }]
       }).then(response => {
-        commit('SET_TOKEN', response[0].accountId)
-        setToken(response[0].accountId)
+        commit('SET_TOKEN', response[0].userId)
+        setToken(response[0].userId)
         resolve()
       }).catch(error => {
         reject(error)
@@ -64,17 +64,17 @@ const actions = {
     return new Promise((resolve, reject) => {
       login({
         args: [{
-          accountId: state.token
+          userId: state.token
         }]
       }).then(response => {
         var roles
-        if (response[0].userName === '管理员') {
+        if (response[0].userName === 'Admin') {
           roles = ['admin']
         } else {
           roles = ['editor']
         }
         commit('SET_ROLES', roles)
-        commit('SET_ACCOUNTID', response[0].accountId)
+        commit('SET_ACCOUNTID', response[0].userId)
         commit('SET_USERNAME', response[0].userName)
         resolve(roles)
       }).catch(error => {
@@ -125,7 +125,7 @@ export default {
 // const getDefaultState = () => {
 //   return {
 //     token: getToken(),
-//     accountId: '',
+//     userId: '',
 //     userName: '',
 //     roles: []
 //   }
@@ -140,8 +140,8 @@ export default {
 //   SET_TOKEN: (state, token) => {
 //     state.token = token
 //   },
-//   SET_ACCOUNTID: (state, accountId) => {
-//     state.accountId = accountId
+//   SET_ACCOUNTID: (state, userId) => {
+//     state.userId = userId
 //   },
 //   SET_USERNAME: (state, userName) => {
 //     state.userName = userName
@@ -155,15 +155,15 @@ export default {
 //   login({
 //     commit,
 //     dispatch
-//   }, accountId) {
+//   }, userId) {
 //     return new Promise((resolve, reject) => {
 //       login({
 //         args: [{
-//           accountId: accountId
+//           userId: userId
 //         }]
 //       }).then(response => {
-//         commit('SET_TOKEN', response[0].accountId)
-//         setToken(response[0].accountId)
+//         commit('SET_TOKEN', response[0].userId)
+//         setToken(response[0].userId)
 //         // 在登录成功后获取用户信息
 //         dispatch('getInfo').then(roles => {
 //           if (roles.includes('admin')) {
@@ -188,7 +188,7 @@ export default {
 //     return new Promise((resolve, reject) => {
 //       login({
 //         args: [{
-//           accountId: state.token
+//           userId: state.token
 //         }]
 //       }).then(response => {
 //         var roles
@@ -198,7 +198,7 @@ export default {
 //           roles = ['editor']
 //         }
 //         commit('SET_ROLES', roles)
-//         commit('SET_ACCOUNTID', response[0].accountId)
+//         commit('SET_ACCOUNTID', response[0].userId)
 //         commit('SET_USERNAME', response[0].userName)
 //         resolve(roles)
 //       }).catch(error => {
