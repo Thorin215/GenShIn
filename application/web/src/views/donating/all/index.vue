@@ -60,7 +60,7 @@ export default {
       'userId',
       'roles',
       'userName'
-    ])
+    ])  
   },
   created() {
     queryDonatingList().then(response => {

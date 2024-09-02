@@ -47,20 +47,9 @@ export function queryAccountList() {
 // }
 
 // // 登录
-export function login(data) {
-  return request({
-    url: 'http://localhost:8888/api/v1/queryAccountList',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    method: 'post',
-    data
-  })
-}
-
 // export function login(data) {
 //   return request({
-//     url: 'http://localhost:8888/api/v1/checkAccount',
+//     url: 'http://localhost:8888/api/v1/queryAccountList',
 //     headers: {
 //       'Content-Type': 'application/json'
 //     },
@@ -68,3 +57,14 @@ export function login(data) {
 //     data
 //   })
 // }
+
+export function login(data) {
+  return request({
+    url: 'http://localhost:8888/api/v1/checkAccount',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    method: 'post',
+    data
+  })
+}

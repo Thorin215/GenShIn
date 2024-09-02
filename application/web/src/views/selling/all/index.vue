@@ -2,17 +2,127 @@
   <div class="container">
     <el-alert type="success">
       <p>账户ID: {{ userId }}</p>
-      <!-- <p>用户名: {{ userName }}</p>
-      <p>余额: ￥{{ balance }} 元</p> -->
     </el-alert>
 
-    <!-- 新增部分 -->
+    <!-- 数据集创建部分 -->
     <div class="dataset-container">
       <el-input
-        v-model="newDatasetId"
-        placeholder="请输入要创建的数据集编号"
+        v-model="newDatasetName"
+        placeholder="请输入要创建的数据集名称"
         class="dataset-input"
       />
+      
+      <el-select
+        v-model="metadata.tasks"
+        placeholder="请选择任务"
+        class="dataset-select"
+        multiple
+      >
+        <el-option
+          v-for="task in availableTasks"
+          :key="task"
+          :label="task"
+          :value="task"
+        />
+      </el-select>
+      
+      <el-select
+        v-model="metadata.modalities"
+        placeholder="请选择数据模态"
+        class="dataset-select"
+        multiple
+      >
+        <el-option
+          v-for="modality in availableModalities"
+          :key="modality"
+          :label="modality"
+          :value="modality"
+        />
+      </el-select>
+      
+      <el-select
+        v-model="metadata.formats"
+        placeholder="请选择文件格式"
+        class="dataset-select"
+        multiple
+      >
+        <el-option
+          v-for="format in availableFormats"
+          :key="format"
+          :label="format"
+          :value="format"
+        />
+      </el-select>
+
+      <el-select
+        v-model="metadata.subTasks"
+        placeholder="请选择子任务"
+        class="dataset-select"
+        multiple
+      >
+        <el-option
+          v-for="subTask in availableSubTasks"
+          :key="subTask"
+          :label="subTask"
+          :value="subTask"
+        />
+      </el-select>
+
+      <el-select
+        v-model="metadata.languages"
+        placeholder="请选择语言"
+        class="dataset-select"
+        multiple
+      >
+        <el-option
+          v-for="language in availableLanguages"
+          :key="language"
+          :label="language"
+          :value="language"
+        />
+      </el-select>
+
+      <el-select
+        v-model="metadata.libraries"
+        placeholder="请选择适用库"
+        class="dataset-select"
+        multiple
+      >
+        <el-option
+          v-for="library in availableLibraries"
+          :key="library"
+          :label="library"
+          :value="library"
+        />
+      </el-select>
+
+      <el-select
+        v-model="metadata.tags"
+        placeholder="请选择标签"
+        class="dataset-select"
+        multiple
+      >
+        <el-option
+          v-for="tag in availableTags"
+          :key="tag"
+          :label="tag"
+          :value="tag"
+        />
+      </el-select>
+
+      <el-select
+        v-model="metadata.license"
+        placeholder="请选择许可证"
+        class="dataset-select"
+      >
+        <el-option
+          v-for="license in availableLicenses"
+          :key="license"
+          :label="license"
+          :value="license"
+        />
+      </el-select>
+
       <el-button
         type="primary"
         @click="createDataset"
@@ -20,8 +130,8 @@
       >
         创建数据集
       </el-button>
-      <p v-if="createdDatasetId" class="dataset-info">
-        创建成功！数据集编号: {{ createdDatasetId }}, 账户ID: {{ userId }}
+      <p v-if="createdDatasetName" class="dataset-info">
+        创建成功！数据集名称: {{ createdDatasetName }}, 账户ID: {{ userId }}
       </p>
     </div>
   </div>
@@ -29,133 +139,119 @@
 
 <script>
 import { mapGetters } from 'vuex'
-import { querySellingList, createSellingByBuy, updateSelling } from '@/api/selling'
 import { uploadSet } from '@/api/upload'
 
 export default {
   name: 'AllSelling',
   data() {
-  return {
-    loading: false,
-    sellingList: [],
-    newDatasetId: '',        // 用户输入的新数据集编号
-    createdDatasetId: '',    // 返回的创建的数据集编号
-    creationTime: '',        // 返回的创建时间
-    lastModified: ''         // 返回的最后修改时间
-  }
-},
+    return {
+      loading: false,
+      newDatasetName: '',      // 用户输入的新数据集名称
+      createdDatasetName: '',  // 返回的创建的数据集名称
+      creationTime: '',
+     // lastModified: '',
+      metadata: {
+        tasks: [],
+        modalities: [],
+        formats: [],
+        subTasks: [],
+        languages: [],
+        libraries: [],
+        tags: [],
+        license: ''
+      },
+      availableTasks: ['任务1', '任务2', '任务3'],  // 示例数据
+      availableModalities: ['模态1', '模态2', '模态3'],  // 示例数据
+      availableFormats: ['格式1', '格式2', '格式3'],  // 示例数据
+      availableSubTasks: ['子任务1', '子任务2', '子任务3'],  // 示例数据
+      availableLanguages: ['语言1', '语言2', '语言3'],  // 示例数据
+      availableLibraries: ['库1', '库2', '库3'],  // 示例数据
+      availableTags: ['标签1', '标签2', '标签3'],  // 示例数据
+      availableLicenses: ['许可证1', '许可证2', '许可证3']  // 示例数据
+    }
+  },
   computed: {
     ...mapGetters([
       'userId',
       'roles',
-      'userName',
-      'balance'
+      'userName'
     ])
   },
-  created() {
-    this.fetchSellingList();
-  },
   methods: {
-  createDataset() {
-    console.log('Create Dataset button clicked');
-    if (!this.newDatasetId) {
-      this.$message({
-        type: 'warning',
-        message: '数据集编号不能为空!'
-      })
-      return
-    }
-
-    const currentTime = new Date().toISOString(); // 获取当前时间的 ISO 字符串
-
-    this.loading = true;
-    uploadSet({
-      dataset_id: this.newDatasetId,
-      account_id: this.userId,
-      creation_time: currentTime // 传递创建时间
-    }).then(response => {
-      console.log('Response:', response); // 调试输出
-      this.loading = false;
-      if (response) {
-        // 更新创建的数据集编号和时间
-        this.createdDatasetId = response.dataset_id;
-        this.creationTime = response.creation_time;
-        this.lastModified = response.last_modified;
-
+    createDataset() {
+      if (!this.newDatasetName) {
         this.$message({
-          type: 'success',
-          message: `数据集创建成功! 创建时间: ${this.creationTime}, 最后修改时间: ${this.lastModified}`
-        });
-      } else {
+          type: 'warning',
+          message: '数据集名称不能为空!'
+        })
+        return
+      }
+
+      const currentTime = new Date().toISOString(); // 获取当前时间的 ISO 字符串
+
+      // 处理 metadata，将选择的数据转换为数组
+      const metadata = {
+        ...this.metadata
+      };
+
+      this.loading = true;
+      uploadSet({
+        Name: this.newDatasetName,  // 修改为数据集名称
+        Owner: this.userId,
+        CreationTime: currentTime,
+        metadata: metadata
+      }).then(response => {
+        this.loading = false;
+        if (response) {
+          this.createdDatasetName = response.dataset_name;
+          this.$message({
+            type: 'success',
+            message: `数据集创建成功! 创建时间: ${currentTime}`
+          });
+        } else {
+          this.$message({
+            type: 'error',
+            message: '数据集名称重复! 请重试。'
+          });
+        }
+      }).catch(error => {
+        this.loading = false;
         this.$message({
           type: 'error',
-          message: '数据集编号重复! 请重试。'
+          message: `创建数据集时发生错误: ${error.message}`
         });
-      }
-    }).catch(error => {
-      console.error('Error:', error); // 调试输出
-      this.loading = false;
-      this.$message({
-        type: 'error',
-        message: `创建数据集时发生错误: ${error.message}`
       });
-    });
+    }
   }
-}
 }
 </script>
 
 <style>
-  .container {
-    width: 100%;
-    text-align: center;
-    min-height: 100%;
-    overflow: hidden;
-  }
+.container {
+  width: 100%;
+  text-align: center;
+  min-height: 100%;
+  overflow: hidden;
+}
 
-  .tag {
-    float: left;
-  }
+.dataset-container {
+  margin: 20px auto;
+  text-align: center;
+  max-width: 500px; /* 控制容器宽度 */
+}
 
-  .item {
-    font-size: 14px;
-    margin-bottom: 18px;
-    color: #999;
-  }
+.dataset-select {
+  width: 100%;
+  margin: 10px 0;
+}
 
-  .clearfix:before,
-  .clearfix:after {
-    display: table;
-  }
+.dataset-button {
+  margin: 10px 0;
+}
 
-  .clearfix:after {
-    clear: both;
-  }
-
-  .all-card {
-    width: 280px;
-    height: 380px;
-    margin: 18px;
-  }
-
-  /* 新增部分的样式 */
-  .dataset-container {
-    margin: 20px 0;
-    text-align: center;
-  }
-
-  .dataset-input {
-    width: 300px;
-    margin-right: 10px;
-  }
-
-  .dataset-button {
-    margin-left: 10px;
-  }
-
-  .dataset-info {
-    margin-top: 20px;
-    color: #409EFF; /* El-Button primary color */
-    font-size: 16px;
-  }
+.dataset-info {
+  margin-top: 20px;
+  color: #409EFF;
+  font-size: 16px;
+}
 </style>
