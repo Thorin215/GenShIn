@@ -5,7 +5,7 @@
     >
       <p>账户ID: {{ userId }}</p>
       <p>用户名: {{ userName }}</p>
-      <p>余额: ￥{{ balance }} 元</p>
+      <!-- <p>余额: ￥{{ balance }} 元</p> -->
     </el-alert>
     <div v-if="donatingList.length==0" style="text-align: center;">
       <el-alert
@@ -57,10 +57,9 @@ export default {
   },
   computed: {
     ...mapGetters([
-      'accountId',
+      'userId',
       'roles',
-      'userName',
-      'balance'
+      'userName'
     ])
   },
   created() {

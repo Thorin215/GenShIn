@@ -17,9 +17,6 @@
           <el-dropdown-item>
             用户名: {{ userName }}
           </el-dropdown-item>
-          <a target="_blank" href="https://github.com/togettoyou/fabric-realty">
-            <el-dropdown-item>项目地址</el-dropdown-item>
-          </a>
           <el-dropdown-item divided @click.native="logout">
             <span style="display:block;">切换账户</span>
           </el-dropdown-item>
@@ -43,8 +40,7 @@ export default {
     ...mapGetters([
       'sidebar',
       'userId',
-      'userName',
-      'balance'
+      'userName'
     ])
   },
   methods: {

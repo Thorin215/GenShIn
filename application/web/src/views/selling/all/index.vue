@@ -1,7 +1,7 @@
 <template>
   <div class="container">
     <el-alert type="success">
-      <p>账户ID: {{ accountId }}</p>
+      <p>账户ID: {{ userId }}</p>
       <!-- <p>用户名: {{ userName }}</p>
       <p>余额: ￥{{ balance }} 元</p> -->
     </el-alert>
@@ -21,71 +21,9 @@
         创建数据集
       </el-button>
       <p v-if="createdDatasetId" class="dataset-info">
-        创建成功！数据集编号: {{ createdDatasetId }}, 账户ID: {{ accountId }}
+        创建成功！数据集编号: {{ createdDatasetId }}, 账户ID: {{ userId }}
       </p>
     </div>
-
-    <!-- <div v-if="sellingList.length === 0" style="text-align: center;">
-      <el-alert title="查询不到数据" type="warning" />
-    </div>
-    <el-row v-loading="loading" :gutter="20">
-      <el-col v-for="(val, index) in sellingList" :key="index" :span="6" :offset="1">
-        <el-card class="all-card"> -->
-          <!-- <div slot="header" class="clearfix">
-            <span>{{ val.sellingStatus }}</span>
-            <el-button
-              v-if="roles[0] !== 'admin' && (val.seller === accountId || val.buyer === accountId) && val.sellingStatus !== '完成' && val.sellingStatus !== '已过期' && val.sellingStatus !== '已取消'"
-              style="float: right; padding: 3px 0"
-              type="text"
-              @click="updateSelling(val, 'cancelled')"
-            >
-              取消
-            </el-button>
-            <el-button
-              v-if="roles[0] !== 'admin' && val.seller === accountId && val.sellingStatus === '交付中'"
-              style="float: right; padding: 3px 8px"
-              type="text"
-              @click="updateSelling(val, 'done')"
-            >
-              确认收款
-            </el-button>
-            <el-button
-              v-if="roles[0] !== 'admin' && val.sellingStatus === '销售中' && val.seller !== accountId"
-              style="float: right; padding: 3px 0"
-              type="text"
-              @click="createSellingByBuy(val)"
-            >
-              购买
-            </el-button>
-          </div> -->
-          <!-- <div class="item">
-            <el-tag>房产ID: </el-tag>
-            <span>{{ val.objectOfSale }}</span>
-          </div>
-          <div class="item">
-            <el-tag type="success">销售者ID: </el-tag>
-            <span>{{ val.seller }}</span>
-          </div>
-          <div class="item">
-            <el-tag type="danger">价格: </el-tag>
-            <span>￥{{ val.price }} 元</span>
-          </div> -->
-          <!-- <div class="item">
-            <el-tag type="warning">有效期: </el-tag>
-            <span>{{ val.salePeriod }} 天</span>
-          </div> -->
-          <!-- <div class="item">
-            <el-tag type="info">创建时间: </el-tag>
-            <span>{{ val.createTime }}</span>
-          </div> -->
-          <!-- <div class="item">
-            <el-tag>购买者ID: </el-tag>
-            <span v-if="val.buyer === ''">虚位以待</span>
-            <span>{{ val.buyer }}</span>
-          </div> -->
-        <!-- </el-card>
-      </el-col>
-    </el-row> -->
   </div>
 </template>
 
@@ -108,7 +46,7 @@ export default {
 },
   computed: {
     ...mapGetters([
-      'accountId',
+      'userId',
       'roles',
       'userName',
       'balance'
@@ -133,7 +71,7 @@ export default {
     this.loading = true;
     uploadSet({
       dataset_id: this.newDatasetId,
-      account_id: this.accountId,
+      account_id: this.userId,
       creation_time: currentTime // 传递创建时间
     }).then(response => {
       console.log('Response:', response); // 调试输出
