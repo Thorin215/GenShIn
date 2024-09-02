@@ -1,8 +1,8 @@
 <template>
   <div class="container">
-    <el-alert type="success">
+    <!-- <el-alert type="success">
       <p>账户ID: {{ userId }}</p>
-    </el-alert>
+    </el-alert> -->
 
     <!-- 数据集创建部分 -->
     <div class="dataset-container">
@@ -12,6 +12,13 @@
         class="dataset-input"
       />
       
+      <el-input
+        v-model.number="rows"
+        type="number"
+        placeholder="请输入数据集行数"
+        class="dataset-input"
+      />
+
       <el-select
         v-model="metadata.tasks"
         placeholder="请选择任务"
@@ -148,8 +155,7 @@ export default {
       loading: false,
       newDatasetName: '',      // 用户输入的新数据集名称
       createdDatasetName: '',  // 返回的创建的数据集名称
-      creationTime: '',
-     // lastModified: '',
+      rows: 0,                 // 数据集行数
       metadata: {
         tasks: [],
         modalities: [],
@@ -196,9 +202,10 @@ export default {
 
       this.loading = true;
       uploadSet({
-        Name: this.newDatasetName,  // 修改为数据集名称
+        Name: this.newDatasetName,  // 数据集名称
         Owner: this.userId,
         CreationTime: currentTime,
+        Rows: this.rows,  // 新添加的行数字段
         metadata: metadata
       }).then(response => {
         this.loading = false;
@@ -237,7 +244,15 @@ export default {
 .dataset-container {
   margin: 20px auto;
   text-align: center;
-  max-width: 500px; /* 控制容器宽度 */
+  max-width: 600px; /* 控制容器宽度 */
+  padding: 20px;
+  border: 1px solid #dcdfe6;
+  border-radius: 8px;
+  background-color: #fff;
+}
+
+.dataset-input {
+  margin-bottom: 20px;
 }
 
 .dataset-select {
@@ -246,7 +261,7 @@ export default {
 }
 
 .dataset-button {
-  margin: 10px 0;
+  margin: 20px 0;
 }
 
 .dataset-info {

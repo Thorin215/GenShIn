@@ -1,45 +1,39 @@
 <template>
   <div class="container">
-    <el-alert
+    <!-- <el-alert
       type="success"
+      title="账户信息"
     >
       <p>账户ID: {{ userId }}</p>
       <p>用户名: {{ userName }}</p>
-      <!-- <p>余额: ￥{{ balance }} 元</p> -->
-    </el-alert>
-    <div v-if="donatingList.length==0" style="text-align: center;">
+       <p>余额: ￥{{ balance }} 元</p> 
+    </el-alert> -->
+    
+    <!-- 新添加的表单部分 -->
+    <el-form :model="datasetVersion" ref="form" class="dataset-form">
+      <el-form-item label="创建时间">
+        <el-input v-model="datasetVersion.creationTime" placeholder="请输入创建时间" />
+      </el-form-item>
+      <el-form-item label="版本说明">
+        <el-input v-model="datasetVersion.changeLog" placeholder="请输入版本说明" />
+      </el-form-item>
+      <el-form-item label="行数">
+        <el-input type="number" v-model.number="datasetVersion.rows" placeholder="请输入行数" />
+      </el-form-item>
+      <el-form-item label="文件哈希列表">
+        <el-input v-model="datasetVersion.files" placeholder="用逗号分隔的文件哈希" />
+      </el-form-item>
+      <el-form-item>
+        <el-button type="primary" size="large" @click="submitForm">提交</el-button>
+      </el-form-item>
+    </el-form>
+
+    <!-- <div v-if="donatingList.length === 0" class="no-data">
       <el-alert
         title="查询不到数据"
         type="warning"
       />
-    </div>
-    <el-row v-loading="loading" :gutter="20">
-      <el-col v-for="(val,index) in donatingList" :key="index" :span="6" :offset="1">
-        <el-card class="d-all-card">
-          <div slot="header" class="clearfix">
-            <span>{{ val.donatingStatus }}</span>
-            <el-button v-if="roles[0] !== 'admin'&&val.grantee===accountId&&val.donatingStatus==='捐赠中'" style="float: right; padding: 3px 6px" type="text" @click="updateDonating(val,'done')">确认接收</el-button>
-            <el-button v-if="roles[0] !== 'admin'&&(val.donor===accountId||val.grantee===accountId)&&val.donatingStatus==='捐赠中'" style="float: right; padding: 3px 0" type="text" @click="updateDonating(val,'cancelled')">取消</el-button>
-          </div>
-          <div class="item">
-            <el-tag>房产ID: </el-tag>
-            <span>{{ val.objectOfDonating }}</span>
-          </div>
-          <div class="item">
-            <el-tag type="success">捐赠者ID: </el-tag>
-            <span>{{ val.donor }}</span>
-          </div>
-          <div class="item">
-            <el-tag type="danger">受赠人ID: </el-tag>
-            <span>{{ val.grantee }}</span>
-          </div>
-          <div class="item">
-            <el-tag type="warning">创建时间: </el-tag>
-            <span>{{ val.createTime }}</span>
-          </div>
-        </el-card>
-      </el-col>
-    </el-row>
+    </div> -->
   </div>
 </template>
 
@@ -52,7 +46,13 @@ export default {
   data() {
     return {
       loading: true,
-      donatingList: []
+      donatingList: [],
+      datasetVersion: {
+        creationTime: '',
+        changeLog: '',
+        rows: 0,
+        files: ''
+      }
     }
   },
   computed: {
@@ -117,40 +117,43 @@ export default {
           message: '已取消' + tip
         })
       })
+    },
+    submitForm() {
+      const filesArray = this.datasetVersion.files.split(',').map(file => file.trim())
+      const dataToSubmit = { ...this.datasetVersion, files: filesArray }
+
+      // 处理提交逻辑，例如发送数据到后端
+      console.log('提交的数据:', dataToSubmit)
     }
   }
 }
-
 </script>
 
 <style>
-  .container{
-    width: 100%;
-    text-align: center;
-    min-height: 100%;
-    overflow: hidden;
-  }
-  .tag {
-    float: left;
-  }
-
-  .item {
-    font-size: 14px;
-    margin-bottom: 18px;
-    color: #999;
-  }
-
-  .clearfix:before,
-  .clearfix:after {
-    display: table;
-  }
-  .clearfix:after {
-    clear: both
-  }
-
-  .d-all-card {
-    width: 280px;
-    height: 300px;
-    margin: 18px;
-  }
+.container {
+  width: 60%;
+  margin: 20px auto;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  background-color: #fff;
+}
+.el-alert {
+  margin-bottom: 20px;
+}
+.dataset-form {
+  max-width: 600px;
+  margin: 0 auto;
+}
+.el-form-item {
+  margin-bottom: 20px;
+}
+.el-button {
+  width: 100%;
+}
+.no-data {
+  text-align: center;
+}
 </style>
+
+
