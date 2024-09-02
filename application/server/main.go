@@ -36,35 +36,91 @@ func main() {
 	sql.DB.AutoMigrate(&model.DataSet{})
 	sql.DB.AutoMigrate(&model.MetaData{})
 	sql.DB.AutoMigrate(&opLog.Log{})
+	//----------------------测试代码----------------------
 
-	model.CreateDataSet(&model.DataSet{
-		Name:         "default",
-		AccountID:    1,
-		Stars:        0,
-		DataSetID:    1,
-		ModifiedTime: time.Now(),
-		CreateTime:   time.Now(),
-		Data:         []byte("default"),
-	}, &model.MetaData{
-		DataSetID:  1,
-		Tasks:      "default",
-		Modalities: "default",
-		Formats:    "default",
-		SubTasks:   "default",
-		Languages:  "default",
-		Libararies: "default",
-		Tags:       "default",
-		License:    "default",
-		Rows:       0,
-	})
+	model.CreateDataSet(
+		&model.DataSet{
+			Name:         "default",
+			AccountID:    1,
+			Stars:        0,
+			DataSetID:    1,
+			ModifiedTime: time.Now(),
+			CreateTime:   time.Now(),
+			Data:         []byte("default"),
+			Downloads:    0,
+		}, &model.MetaData{
+			DataSetID:  1,
+			Tasks:      "default",
+			Modalities: "default",
+			Formats:    "default",
+			SubTasks:   "default",
+			Languages:  "default",
+			Libararies: "default",
+			Tags:       "default",
+			License:    "default",
+			Rows:       0,
+		})
+
+	model.CreateDataSet(
+		&model.DataSet{
+			Name:         "default1",
+			AccountID:    1,
+			Stars:        0,
+			DataSetID:    2,
+			ModifiedTime: time.Now(),
+			CreateTime:   time.Now(),
+			Data:         []byte("default"),
+			Downloads:    0,
+		}, &model.MetaData{
+			DataSetID:  2,
+			Tasks:      "default",
+			Modalities: "default",
+			Formats:    "default",
+			SubTasks:   "default",
+			Languages:  "default",
+			Libararies: "default",
+			Tags:       "default",
+			License:    "default",
+			Rows:       0,
+		})
 
 	opLog.CreateLog(&opLog.Log{
 		LogID:     1,
 		DataSetID: 1,
-		OpMsg:     "default",
-		Status:    "default",
+		ChangeLog: "default",
 		TimeStamp: time.Now(),
 	})
+
+	opLog.CreateLog(&opLog.Log{
+		LogID:     2,
+		DataSetID: 1,
+		ChangeLog: "default11",
+		TimeStamp: time.Now(),
+	})
+
+	Logs, _ := opLog.GetLog(1)
+	fmt.Println(Logs)
+
+	dataSet, metaData, _ := model.GetDataSet(1)
+	fmt.Println(dataSet)
+	fmt.Println(metaData)
+
+	dataSetList, _ := model.GetDataSetList(1)
+	fmt.Println(dataSetList)
+
+	UpdateDataSet := &model.DataSet{
+		Name:         "default1",
+		AccountID:    1,
+		Stars:        0,
+		DataSetID:    1,
+		ModifiedTime: time.Time{},
+		CreateTime:   time.Time{},
+		Data:         nil,
+		Downloads:    0,
+	}
+
+	model.UpdateDataSet(UpdateDataSet)
+	//------------------------------------------------
 
 	blockchain.Init()
 	go cron.Init()

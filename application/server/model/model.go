@@ -67,16 +67,17 @@ type TData_Set struct {
 
 type DataSet struct {
 	Name         string    `json:"name"`
-	AccountID    int       `json:"account_id" gorm:"primary_key"`
-	Stars        int       `json:"stars"`
-	DataSetID    int       `json:"dataset_id" gorm:"primary_key"`
+	AccountID    int32     `json:"account_id"`
+	Stars        int32     `json:"stars"`
+	DataSetID    int32     `json:"dataset_id" gorm:"primary_key"`
 	CreateTime   time.Time `json:"create_time"`
 	ModifiedTime time.Time `json:"modified_time"`
 	Data         []byte    `json:"data"`
+	Downloads    int32     `json:"downloads"`
 }
 
 type MetaData struct {
-	DataSetID  int    `json:"dataset_id" gorm:"primary_key"`
+	DataSetID  int32  `json:"dataset_id" gorm:"primary_key"`
 	Tasks      string `json:"tasks"`
 	Modalities string `json:"modalities"`
 	Formats    string `json:"formats"`
@@ -85,7 +86,7 @@ type MetaData struct {
 	Libararies string `json:"libraries"`
 	Tags       string `json:"tags"`
 	License    string `json:"license"`
-	Rows       int    `json:"rows"`
+	Rows       int32  `json:"rows"`
 }
 
 func CreateDataSet(dataSet *DataSet, metaData *MetaData) error {
@@ -101,29 +102,31 @@ func CreateDataSet(dataSet *DataSet, metaData *MetaData) error {
 	return error
 }
 
-func GetDataSet(dataSetID int) (*DataSet, *MetaData, error) {
+func GetDataSet(dataSetID int32) (*DataSet, *MetaData, error) {
 	dataSet := &DataSet{}
 	metaData := &MetaData{}
-	err := sql.DB.Where("dataset_id = ?", dataSetID).First(dataSet).Error
+	err := sql.DB.Where("data_set_id = ?", dataSetID).First(dataSet).Error
 	if err != nil {
 		return nil, nil, err
 	}
-	err = sql.DB.Where("dataset_id = ?", dataSetID).First(metaData).Error
+	err = sql.DB.Where("data_set_id = ?", dataSetID).First(metaData).Error
 	if err != nil {
 		return nil, nil, err
 	}
 	return dataSet, metaData, nil
 }
 
-func UpdateDataSet(dataSet *DataSet, metaData *MetaData) error {
-	error := sql.DB.Save(dataSet).Save(metaData).Error
-	if error == nil {
-		sql.DB.Model(&DataSet{}).Where("dataset_id = ?", dataSet.DataSetID).Update("modified_time", time.Now())
-	}
+func UpdateDataSet(dataSet *DataSet) error {
+	error := sql.DB.Updates(dataSet).Error
 	return error
 }
 
-func DeleteDataSet(dataSetID int) error {
+func UpdateMetaData(metaData *MetaData) error {
+	error := sql.DB.Updates(metaData).Error
+	return error
+}
+
+func DeleteDataSet(dataSetID int32) error {
 	error := sql.DB.Transaction(func(tx *gorm.DB) error {
 		if err := tx.Where("dataset_id = ?", dataSetID).Delete(&DataSet{}).Error; err != nil {
 			return err
@@ -136,9 +139,9 @@ func DeleteDataSet(dataSetID int) error {
 	return error
 }
 
-func GetDataSetList() ([]DataSet, error) {
+func GetDataSetList(account_id int32) ([]DataSet, error) {
 	dataSetList := []DataSet{}
-	err := sql.DB.Find(&dataSetList).Error
+	err := sql.DB.Where("account_id = ?", account_id).Find(&dataSetList).Error
 	if err != nil {
 		return nil, err
 	}
@@ -152,4 +155,19 @@ func GetDataSetListByName(name string) ([]DataSet, error) {
 		return nil, err
 	}
 	return dataSetList, nil
+}
+
+func DownloadCountPlus(dataSetID int32) error {
+	error := sql.DB.Model(&DataSet{}).Where("dataset_id = ?", dataSetID).Update("downloads", gorm.Expr("downloads + ?", 1)).Error
+	return error
+}
+
+func StarCountPlus(dataSetID int32) error {
+	error := sql.DB.Model(&DataSet{}).Where("dataset_id = ?", dataSetID).Update("stars", gorm.Expr("stars + ?", 1)).Error
+	return error
+}
+
+func StarCountMinus(dataSetID int32) error {
+	error := sql.DB.Model(&DataSet{}).Where("dataset_id = ?", dataSetID).Update("stars", gorm.Expr("stars - ?", 1)).Error
+	return error
 }
