@@ -66,12 +66,13 @@ type TData_Set struct {
 }
 
 type DataSet struct {
-	Name       string    `json:"name"`
-	AccountID  int       `json:"account_id" gorm:"primary_key"`
-	Stars      int       `json:"stars"`
-	DataSetID  int       `json:"dataset_id" gorm:"primary_key"`
-	CreateTime time.Time `json:"create_time"`
-	ModifyTime time.Time `json:"modified_time"`
+	Name         string    `json:"name"`
+	AccountID    int       `json:"account_id" gorm:"primary_key"`
+	Stars        int       `json:"stars"`
+	DataSetID    int       `json:"dataset_id" gorm:"primary_key"`
+	CreateTime   time.Time `json:"create_time"`
+	ModifiedTime time.Time `json:"modified_time"`
+	Data         []byte    `json:"data"`
 }
 
 type MetaData struct {

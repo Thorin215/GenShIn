@@ -13,16 +13,11 @@ import (
 	"application/sql"
 
 	// "github.com/jinzhu/gorm"
+	opLog "application/log"
 	"application/model"
-
-	"gorm.io/gorm"
 )
 
 const DBfile = "./conf/config.ini"
-
-type TestData struct {
-	gorm.Model
-}
 
 func main() {
 	timeLocal, err := time.LoadLocation("Asia/Shanghai")
@@ -38,9 +33,38 @@ func main() {
 
 	sql.InitMysql(setting.Conf.MysqlConfig)
 
-	sql.DB.AutoMigrate(&TestData{})
 	sql.DB.AutoMigrate(&model.DataSet{})
 	sql.DB.AutoMigrate(&model.MetaData{})
+	sql.DB.AutoMigrate(&opLog.Log{})
+
+	model.CreateDataSet(&model.DataSet{
+		Name:         "default",
+		AccountID:    1,
+		Stars:        0,
+		DataSetID:    1,
+		ModifiedTime: time.Now(),
+		CreateTime:   time.Now(),
+		Data:         []byte("default"),
+	}, &model.MetaData{
+		DataSetID:  1,
+		Tasks:      "default",
+		Modalities: "default",
+		Formats:    "default",
+		SubTasks:   "default",
+		Languages:  "default",
+		Libararies: "default",
+		Tags:       "default",
+		License:    "default",
+		Rows:       0,
+	})
+
+	opLog.CreateLog(&opLog.Log{
+		LogID:     1,
+		DataSetID: 1,
+		OpMsg:     "default",
+		Status:    "default",
+		TimeStamp: time.Now(),
+	})
 
 	blockchain.Init()
 	go cron.Init()
