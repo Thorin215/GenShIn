@@ -3,7 +3,7 @@
     <el-alert
       type="success"
     >
-      <p>账户ID: {{ accountId }}</p>
+      <p>账户ID: {{ userId }}</p>
       <p>用户名: {{ userName }}</p>
       <p>余额: ￥{{ balance }} 元</p>
     </el-alert>

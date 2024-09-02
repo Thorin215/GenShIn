@@ -52,7 +52,7 @@ export const constantRoutes = [{
     component: () => import('@/views/realestate/list/index'),
     meta: {
       title: '数据信息',
-      icon: 'realestate'
+      icon: 'xj'
     }
   }]
 }
@@ -71,7 +71,7 @@ export const asyncRoutes = [
     alwaysShow: true,
     meta: {
       title: '新建',
-      icon: 'selling'
+      icon: 'new5'
     },
     children: [{
       path: 'all',
@@ -79,7 +79,7 @@ export const asyncRoutes = [
       component: () => import('@/views/selling/all/index'),
       meta: {
         title: '新建数据集',
-        icon: 'sellingAll'
+        icon: 'new2'
       }
     },
     {
@@ -155,7 +155,7 @@ export const asyncRoutes = [
       component: () => import('@/views/realestate/add/index'),
       meta: {
         title: '新增数据',
-        icon: 'addRealestate'
+        icon: 'new4'
       }
     }]
   },

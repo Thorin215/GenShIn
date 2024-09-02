@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"chaincode/model"
 	"encoding/json"
 	"fmt"
@@ -12,7 +11,7 @@ import (
 )
 
 func initTest(t *testing.T) *shim.MockStub {
-	scc := new(BlockChainRealEstate)
+	scc := new(BlockChainGenshin)
 	stub := shim.NewMockStub("ex01", scc)
 	checkInit(t, stub, [][]byte{[]byte("init")})
 	return stub
@@ -26,363 +25,467 @@ func checkInit(t *testing.T, stub *shim.MockStub, args [][]byte) {
 	}
 }
 
-func checkInvoke(t *testing.T, stub *shim.MockStub, args [][]byte) pb.Response {
+func checkInvoke(t *testing.T, stub *shim.MockStub, success bool, args [][]byte) pb.Response {
 	res := stub.MockInvoke("1", args)
-	if res.Status != shim.OK {
-		fmt.Println("Invoke", args, "failed", string(res.Message))
+	if success && res.Status != shim.OK || !success && res.Status == shim.OK {
+		fmt.Println("\n\n! Test failed on invoking")
+		for i, arg := range args {
+			fmt.Printf("! %d: %s\n", i, string(arg))
+		}
+		fmt.Println("! Should success: ", success)
+		fmt.Println("! Status: ", res.Status)
+		fmt.Println("! Message: ", res.Message)
+		fmt.Println("! Payload: ", res.Payload)
 		t.FailNow()
 	}
 	return res
 }
 
 // 测试链码初始化
-func TestBlockChainRealEstate_Init(t *testing.T) {
+func TestBlockChainGenshin_Init(t *testing.T) {
 	initTest(t)
 }
 
-// 测试获取账户信息
-func Test_QueryAccountList(t *testing.T) {
+func Test_HelloWorld(t *testing.T) {
 	stub := initTest(t)
-	fmt.Println(fmt.Sprintf("1、测试获取所有数据\n%s",
-		string(checkInvoke(t, stub, [][]byte{
-			[]byte("queryAccountList"),
-		}).Payload)))
-	fmt.Println(fmt.Sprintf("2、测试获取多个数据\n%s",
-		string(checkInvoke(t, stub, [][]byte{
-			[]byte("queryAccountList"),
-			[]byte("5feceb66ffc8"),
-			[]byte("6b86b273ff34"),
-		}).Payload)))
-	fmt.Println(fmt.Sprintf("3、测试获取单个数据\n%s",
-		string(checkInvoke(t, stub, [][]byte{
-			[]byte("queryAccountList"),
-			[]byte("4e07408562be"),
-		}).Payload)))
-	fmt.Println(fmt.Sprintf("4、测试获取无效数据\n%s",
-		string(checkInvoke(t, stub, [][]byte{
-			[]byte("queryAccountList"),
-			[]byte("0"),
-		}).Payload)))
+	fmt.Printf("Test: HelloWorld\n%s",
+		string(checkInvoke(t, stub, true, [][]byte{
+			[]byte("hello"),
+		}).Payload))
 }
 
-// 测试创建房地产
-func Test_CreateRealEstate(t *testing.T) {
+func Test_DatasetFile(t *testing.T) {
 	stub := initTest(t)
-	//成功
-	checkInvoke(t, stub, [][]byte{
-		[]byte("createRealEstate"),
-		[]byte("5feceb66ffc8"), //操作人
-		[]byte("6b86b273ff34"), //所有者
-		[]byte("50"),           //总面积
-		[]byte("30"),           //生活空间
-	})
-	//操作人权限不足
-	checkInvoke(t, stub, [][]byte{
-		[]byte("createRealEstate"),
-		[]byte("6b86b273ff34"), //操作人
-		[]byte("4e07408562be"), //所有者
-		[]byte("50"),           //总面积
-		[]byte("30"),           //生活空间
-	})
-	//操作人应为管理员且与所有人不能相同
-	checkInvoke(t, stub, [][]byte{
-		[]byte("createRealEstate"),
-		[]byte("5feceb66ffc8"), //操作人
-		[]byte("5feceb66ffc8"), //所有者
-		[]byte("50"),           //总面积
-		[]byte("30"),           //生活空间
-	})
-	//业主proprietor信息验证失败
-	checkInvoke(t, stub, [][]byte{
-		[]byte("createRealEstate"),
-		[]byte("5feceb66ffc8"),    //操作人
-		[]byte("6b86b273ff34555"), //所有者
-		[]byte("50"),              //总面积
-		[]byte("30"),              //生活空间
-	})
-	//参数个数不满足
-	checkInvoke(t, stub, [][]byte{
-		[]byte("createRealEstate"),
-		[]byte("5feceb66ffc8"), //操作人
-		[]byte("6b86b273ff34"), //所有者
-		[]byte("50"),           //总面积
-	})
-	//参数格式转换出错
-	checkInvoke(t, stub, [][]byte{
-		[]byte("createRealEstate"),
-		[]byte("5feceb66ffc8"), //操作人
-		[]byte("6b86b273ff34"), //所有者
-		[]byte("50f"),          //总面积
-		[]byte("30"),           //生活空间
-	})
+
+	fmt.Println("\nTest: DatasetFile")
+
+	const sha256_a = "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9"
+	const sha256_b = "6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b"
+	const sha256_invalid = "6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4"
+
+	fmt.Printf("\n1: CreateFile [sucesss]\n%s",
+		string(checkInvoke(t, stub, true, [][]byte{
+			[]byte("createFile"),
+			[]byte("test_file"),
+			[]byte("1024"),
+			[]byte(sha256_a),
+		}).Payload))
+
+	fmt.Printf("\n2: CreateFile [failed] (file already exists)\n%s",
+		string(checkInvoke(t, stub, false, [][]byte{
+			[]byte("createFile"),
+			[]byte("test_file"),
+			[]byte("1024"),
+			[]byte(sha256_a),
+		}).Payload))
+
+	fmt.Printf("\n3: CreateFile [failed] (invalid filename)\n%s",
+		string(checkInvoke(t, stub, false, [][]byte{
+			[]byte("createFile"),
+			[]byte("t"),
+			[]byte("1024"),
+			[]byte(sha256_b),
+		}).Payload))
+
+	fmt.Printf("\n4: CreateFile [failed] (invalid file size)\n%s",
+		string(checkInvoke(t, stub, false, [][]byte{
+			[]byte("createFile"),
+			[]byte("test_file2"),
+			[]byte("-1"),
+			[]byte(sha256_b),
+		}).Payload))
+
+	fmt.Printf("\n5: CreateFile [failed] (invalid file hash)\n%s",
+		string(checkInvoke(t, stub, false, [][]byte{
+			[]byte("createFile"),
+			[]byte("test_file2"),
+			[]byte("1024"),
+			[]byte(sha256_invalid),
+		}).Payload))
+
+	fmt.Printf("\n6: QueryFile [success]\n%s",
+		string(checkInvoke(t, stub, true, [][]byte{
+			[]byte("queryFile"),
+			[]byte(sha256_a),
+		}).Payload))
 }
 
-//手动创建一些房地产
-func checkCreateRealEstate(stub *shim.MockStub, t *testing.T) []model.RealEstate {
-	var realEstateList []model.RealEstate
-	var realEstate model.RealEstate
-	//成功
-	resp1 := checkInvoke(t, stub, [][]byte{
-		[]byte("createRealEstate"),
-		[]byte("5feceb66ffc8"), //操作人
-		[]byte("6b86b273ff34"), //所有者
-		[]byte("50"),           //总面积
-		[]byte("30"),           //生活空间
-	})
-	resp2 := checkInvoke(t, stub, [][]byte{
-		[]byte("createRealEstate"),
-		[]byte("5feceb66ffc8"), //操作人
-		[]byte("6b86b273ff34"), //所有者
-		[]byte("80"),           //总面积
-		[]byte("60.8"),         //生活空间
-	})
-	resp3 := checkInvoke(t, stub, [][]byte{
-		[]byte("createRealEstate"),
-		[]byte("5feceb66ffc8"), //操作人
-		[]byte("4e07408562be"), //所有者
-		[]byte("60"),           //总面积
-		[]byte("40"),           //生活空间
-	})
-	resp4 := checkInvoke(t, stub, [][]byte{
-		[]byte("createRealEstate"),
-		[]byte("5feceb66ffc8"), //操作人
-		[]byte("ef2d127de37b"), //所有者
-		[]byte("80"),           //总面积
-		[]byte("60"),           //生活空间
-	})
-	json.Unmarshal(bytes.NewBuffer(resp1.Payload).Bytes(), &realEstate)
-	realEstateList = append(realEstateList, realEstate)
-	json.Unmarshal(bytes.NewBuffer(resp2.Payload).Bytes(), &realEstate)
-	realEstateList = append(realEstateList, realEstate)
-	json.Unmarshal(bytes.NewBuffer(resp3.Payload).Bytes(), &realEstate)
-	realEstateList = append(realEstateList, realEstate)
-	json.Unmarshal(bytes.NewBuffer(resp4.Payload).Bytes(), &realEstate)
-	realEstateList = append(realEstateList, realEstate)
-	return realEstateList
+func Test_User(t *testing.T) {
+	stub := initTest(t)
+
+	fmt.Println("\nTest: User")
+
+	fmt.Printf("\n1: CreateUser [success]\n%s",
+		string(checkInvoke(t, stub, true, [][]byte{
+			[]byte("createUser"),
+			[]byte("test_user1"),
+			[]byte("TestUser1"),
+		}).Payload))
+
+	fmt.Printf("\n2: CreateUser [failed] (user already exists)\n%s",
+		string(checkInvoke(t, stub, false, [][]byte{
+			[]byte("createUser"),
+			[]byte("test_user1"),
+			[]byte("TestUser2"),
+		}).Payload))
+
+	fmt.Printf("\n3: CreateUser [failed] (invalid user ID)\n%s",
+		string(checkInvoke(t, stub, false, [][]byte{
+			[]byte("createUser"),
+			[]byte("test_user####"),
+			[]byte("TestUser2"),
+		}).Payload))
+
+	fmt.Printf("\n4: CreateUser [failed] (invalid username)\n%s",
+		string(checkInvoke(t, stub, false, [][]byte{
+			[]byte("createUser"),
+			[]byte("test_user2"),
+			[]byte("Test###User2"),
+		}).Payload))
+
+	fmt.Printf("\n5: ModifyUserName [success]\n%s",
+		string(checkInvoke(t, stub, true, [][]byte{
+			[]byte("modifyUserName"),
+			[]byte("test_user1"),
+			[]byte("TestUser1_Mod"),
+		}).Payload))
+
+	fmt.Printf("\n6: ModifyUserName [failed] (user not exist)\n%s",
+		string(checkInvoke(t, stub, false, [][]byte{
+			[]byte("modifyUserName"),
+			[]byte("test_user114514"),
+			[]byte("TestUser2_Mod"),
+		}).Payload))
+
+	fmt.Printf("\n7: QueryUserList [success]\n%s",
+		string(checkInvoke(t, stub, true, [][]byte{
+			[]byte("queryUserList"),
+		}).Payload))
+
+	fmt.Printf("\n8: QueryUser [success]\n%s",
+		string(checkInvoke(t, stub, true, [][]byte{
+			[]byte("queryUser"),
+			[]byte("test_user1"),
+		}).Payload))
 }
 
-// 测试获取房地产信息
-func Test_QueryRealEstateList(t *testing.T) {
+func ToJson(v interface{}) []byte {
+	bytes, err := json.Marshal(v)
+	if err != nil {
+		panic(err)
+	}
+	return bytes
+}
+func Test_Dataset(t *testing.T) {
 	stub := initTest(t)
-	realEstateList := checkCreateRealEstate(stub, t)
 
-	fmt.Println(fmt.Sprintf("1、测试获取所有数据\n%s",
-		string(checkInvoke(t, stub, [][]byte{
-			[]byte("queryRealEstateList"),
-		}).Payload)))
-	fmt.Println(fmt.Sprintf("2、测试获取指定数据\n%s",
-		string(checkInvoke(t, stub, [][]byte{
-			[]byte("queryRealEstateList"),
-			[]byte(realEstateList[0].Proprietor),
-			[]byte(realEstateList[0].RealEstateID),
-		}).Payload)))
-	fmt.Println(fmt.Sprintf("3、测试获取无效数据\n%s",
-		string(checkInvoke(t, stub, [][]byte{
-			[]byte("queryRealEstateList"),
-			[]byte("0"),
-		}).Payload)))
+	fmt.Println("\nTest: Dataset")
+
+	fmt.Printf("\n0a: CreateUser as dataset owner [success]\n%s",
+		string(checkInvoke(t, stub, true, [][]byte{
+			[]byte("createUser"),
+			[]byte("test_user1"),
+			[]byte("TestUser1"),
+		}).Payload))
+
+	const sha256_a = "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9"
+	const sha256_b = "6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b"
+	const sha256_c = "4e07408562be3a2f0f6e5d51a79a8c001f4b3eac9d9ad681c7f7e1b7f268d5f0"
+	const sha256_d = "ef2d127de37be1e72f7c744f5a326f4f9db08e27f5b4a4273f3b1a6a6f98ae2e"
+	const sha256_e = "d82c8d1619ad8176d665453cfb2e55f0f7f7b3f4b8f4b7f4b7f4b7f4b7f4b7f4"
+
+	fmt.Printf("\n0b: CreateFile x4 as dataset files [success]\n%s%s%s%s",
+		string(checkInvoke(t, stub, true, [][]byte{
+			[]byte("createFile"),
+			[]byte("test_file1"),
+			[]byte("1024"),
+			[]byte(sha256_a),
+		}).Payload),
+		string(checkInvoke(t, stub, true, [][]byte{
+			[]byte("createFile"),
+			[]byte("test_file2"),
+			[]byte("1025"),
+			[]byte(sha256_b),
+		}).Payload),
+		string(checkInvoke(t, stub, true, [][]byte{
+			[]byte("createFile"),
+			[]byte("test_file3"),
+			[]byte("1034"),
+			[]byte(sha256_c),
+		}).Payload),
+		string(checkInvoke(t, stub, true, [][]byte{
+			[]byte("createFile"),
+			[]byte("test_file4"),
+			[]byte("1424"),
+			[]byte(sha256_d),
+		}).Payload),
+	)
+
+	const dataset_owner = "test_user1"
+	const dataset_name = "test_dataset"
+
+	dataset_version1 := model.DatasetVersion{
+		CreationTime: "2021-01-01T00:00:00Z",
+		ChangeLog:    "Initial version",
+		Rows:         100,
+		Files:        []string{sha256_a, sha256_b},
+	}
+	dataset_version2 := model.DatasetVersion{
+		CreationTime: "2021-01-02T00:00:00Z",
+		ChangeLog:    "Add file 3, 4",
+		Rows:         200,
+		Files:        []string{sha256_a, sha256_b, sha256_c, sha256_d},
+	}
+
+	dataset_version_time_invalid := model.DatasetVersion{
+		CreationTime: "2021-01-01T00:00:00",
+		ChangeLog:    "Initial version",
+		Rows:         100,
+		Files:        []string{sha256_a, sha256_b},
+	}
+	dataset_version_rows_invalid := model.DatasetVersion{
+		CreationTime: "2021-01-01T00:00:00Z",
+		ChangeLog:    "Initial version",
+		Rows:         -1,
+		Files:        []string{sha256_a, sha256_b},
+	}
+	dataset_version_files_invalid := model.DatasetVersion{
+		CreationTime: "2021-01-01T00:00:00Z",
+		ChangeLog:    "Initial version",
+		Rows:         100,
+		Files:        []string{sha256_a, sha256_e},
+	}
+
+	res := ToJson([]model.DatasetVersion{dataset_version1})
+
+	fmt.Printf("\n1: CreateDataset [success]\n%s",
+		string(checkInvoke(t, stub, true, [][]byte{
+			[]byte("createDataset"),
+			[]byte(dataset_owner),
+			[]byte(dataset_name),
+			[]byte(res),
+		}).Payload))
+
+	fmt.Printf("\n2: CreateDataset [failed] (dataset already exists)\n%s",
+		string(checkInvoke(t, stub, false, [][]byte{
+			[]byte("createDataset"),
+			[]byte(dataset_owner),
+			[]byte(dataset_name),
+			[]byte(res),
+		}).Payload))
+
+	fmt.Printf("\n3: CreateDataset [failed] (owner not exist)\n%s",
+		string(checkInvoke(t, stub, false, [][]byte{
+			[]byte("createDataset"),
+			[]byte("test_user2"),
+			[]byte(dataset_name),
+			[]byte(res),
+		}).Payload))
+
+	fmt.Printf("\n4: CreateDataset [failed] (invalid dataset name)\n%s",
+		string(checkInvoke(t, stub, false, [][]byte{
+			[]byte("createDataset"),
+			[]byte(dataset_owner),
+			[]byte("test#dataset"),
+			[]byte(res),
+		}).Payload))
+
+	fmt.Printf("\n5: CreateDataset [failed] (invalid dataset version time)\n%s",
+		string(checkInvoke(t, stub, false, [][]byte{
+			[]byte("createDataset"),
+			[]byte(dataset_owner),
+			[]byte("test_dataset2"),
+			[]byte(ToJson([]model.DatasetVersion{dataset_version_time_invalid})),
+		}).Payload))
+
+	fmt.Printf("\n6: CreateDataset [failed] (invalid dataset version rows)\n%s",
+		string(checkInvoke(t, stub, false, [][]byte{
+			[]byte("createDataset"),
+			[]byte(dataset_owner),
+			[]byte("test_dataset3"),
+			[]byte(ToJson([]model.DatasetVersion{dataset_version_rows_invalid})),
+		}).Payload))
+
+	fmt.Printf("\n7: CreateDataset [failed] (invalid dataset version files)\n%s",
+		string(checkInvoke(t, stub, false, [][]byte{
+			[]byte("createDataset"),
+			[]byte(dataset_owner),
+			[]byte("test_dataset4"),
+			[]byte(ToJson([]model.DatasetVersion{dataset_version_files_invalid})),
+		}).Payload))
+
+	fmt.Printf("\n8: QueryDataset [success]\n%s",
+		string(checkInvoke(t, stub, true, [][]byte{
+			[]byte("queryDataset"),
+			[]byte(dataset_owner),
+			[]byte(dataset_name),
+		}).Payload))
+
+	fmt.Printf("\n9: AppendDatasetVersion [success]\n%s",
+		string(checkInvoke(t, stub, true, [][]byte{
+			[]byte("appendDatasetVersion"),
+			[]byte(dataset_owner),
+			[]byte(dataset_name),
+			[]byte(ToJson(dataset_version2)),
+		}).Payload))
+
+	fmt.Printf("\n10: AppendDatasetVersion [failed] (invalid dataset version files)\n%s",
+		string(checkInvoke(t, stub, false, [][]byte{
+			[]byte("appendDatasetVersion"),
+			[]byte(dataset_owner),
+			[]byte(dataset_name),
+			[]byte(ToJson(dataset_version_files_invalid)),
+		}).Payload))
+
+	fmt.Printf("\n11: IncreaseDatasetStars (default +stars) [success]\n%s",
+		string(checkInvoke(t, stub, true, [][]byte{
+			[]byte("increaseDatasetStars"),
+			[]byte(dataset_owner),
+			[]byte(dataset_name),
+		}).Payload))
+
+	fmt.Printf("\n12: IncreaseDatasetStars (specify +stars=3) [success]\n%s",
+		string(checkInvoke(t, stub, true, [][]byte{
+			[]byte("increaseDatasetStars"),
+			[]byte(dataset_owner),
+			[]byte(dataset_name),
+			[]byte("3"),
+		}).Payload))
+
+	fmt.Printf("\n13: IncreaseDatasetStars [failed] (dataset not exist)\n%s",
+		string(checkInvoke(t, stub, false, [][]byte{
+			[]byte("increaseDatasetStars"),
+			[]byte(dataset_owner),
+			[]byte("test_dataset_not_exist"),
+		}).Payload))
+
+	fmt.Printf("\n14: IncreaseDatasetStars [failed] (invalid +stars)\n%s",
+		string(checkInvoke(t, stub, false, [][]byte{
+			[]byte("increaseDatasetStars"),
+			[]byte(dataset_owner),
+			[]byte(dataset_name),
+			[]byte("-1"),
+		}).Payload))
+
+	fmt.Printf("\n15: IncreaseDatasetDownloads (default +downloads) [success]\n%s",
+		string(checkInvoke(t, stub, true, [][]byte{
+			[]byte("increaseDatasetDownloads"),
+			[]byte(dataset_owner),
+			[]byte(dataset_name),
+		}).Payload))
+
+	fmt.Printf("\n16: QueryDatasetList [success]\n%s",
+		string(checkInvoke(t, stub, true, [][]byte{
+			[]byte("queryDatasetList"),
+			[]byte(dataset_owner),
+		}).Payload))
 }
 
-// 测试发起销售
-func Test_CreateSelling(t *testing.T) {
+func Test_DownloadRecord(t *testing.T) {
 	stub := initTest(t)
-	realEstateList := checkCreateRealEstate(stub, t)
-	//成功
-	checkInvoke(t, stub, [][]byte{
-		[]byte("createSelling"),
-		[]byte(realEstateList[0].RealEstateID), //销售对象(正在出售的房地产RealEstateID)
-		[]byte(realEstateList[0].Proprietor),   //卖家(卖家AccountId)
-		[]byte("50"),                           //价格
-		[]byte("30"),                           //智能合约的有效期(单位为天)
-	})
-	//验证销售对象objectOfSale属于卖家seller失败
-	checkInvoke(t, stub, [][]byte{
-		[]byte("createSelling"),
-		[]byte(realEstateList[0].RealEstateID), //销售对象(正在出售的房地产RealEstateID)
-		[]byte(realEstateList[2].Proprietor),   //卖家(卖家AccountId)
-		[]byte("50"),                           //价格
-		[]byte("30"),                           //智能合约的有效期(单位为天)
-	})
-	checkInvoke(t, stub, [][]byte{
-		[]byte("createSelling"),
-		[]byte("123"),                        //销售对象(正在出售的房地产RealEstateID)
-		[]byte(realEstateList[0].Proprietor), //卖家(卖家AccountId)
-		[]byte("50"),                         //价格
-		[]byte("30"),                         //智能合约的有效期(单位为天)
-	})
-	//参数错误
-	checkInvoke(t, stub, [][]byte{
-		[]byte("createSelling"),
-		[]byte(realEstateList[0].RealEstateID), //销售对象(正在出售的房地产RealEstateID)
-		[]byte(realEstateList[0].Proprietor),   //卖家(卖家AccountId)
-		[]byte("50"),                           //价格
-	})
-	checkInvoke(t, stub, [][]byte{
-		[]byte("createSelling"),
-		[]byte(""),                           //销售对象(正在出售的房地产RealEstateID)
-		[]byte(realEstateList[0].Proprietor), //卖家(卖家AccountId)
-		[]byte("50"),                         //价格
-		[]byte("30"),                         //智能合约的有效期(单位为天)
-	})
-}
 
-// 测试销售发起、购买等操作
-func Test_QuerySellingList(t *testing.T) {
-	stub := initTest(t)
-	realEstateList := checkCreateRealEstate(stub, t)
-	//先发起
-	fmt.Println(fmt.Sprintf("发起\n%s", string(checkInvoke(t, stub, [][]byte{
-		[]byte("createSelling"),
-		[]byte(realEstateList[0].RealEstateID), //销售对象(正在出售的房地产RealEstateID)
-		[]byte(realEstateList[0].Proprietor),   //卖家(卖家AccountId)
-		[]byte("500000"),                       //价格
-		[]byte("30"),                           //智能合约的有效期(单位为天)
-	}).Payload)))
-	fmt.Println(fmt.Sprintf("发起\n%s", string(checkInvoke(t, stub, [][]byte{
-		[]byte("createSelling"),
-		[]byte(realEstateList[2].RealEstateID), //销售对象(正在出售的房地产RealEstateID)
-		[]byte(realEstateList[2].Proprietor),   //卖家(卖家AccountId)
-		[]byte("600000"),                       //价格
-		[]byte("40"),                           //智能合约的有效期(单位为天)
-	}).Payload)))
-	//查询成功
-	fmt.Println(fmt.Sprintf("1、查询所有\n%s", string(checkInvoke(t, stub, [][]byte{
-		[]byte("querySellingList"),
-	}).Payload)))
-	fmt.Println(fmt.Sprintf("2、查询指定%s\n%s", realEstateList[0].Proprietor, string(checkInvoke(t, stub, [][]byte{
-		[]byte("querySellingList"),
-		[]byte(realEstateList[0].Proprietor),
-	}).Payload)))
-	//购买
-	fmt.Println(fmt.Sprintf("3、购买前先查询%s的账户余额\n%s", realEstateList[2].Proprietor, string(checkInvoke(t, stub, [][]byte{
-		[]byte("queryAccountList"),
-		[]byte(realEstateList[2].Proprietor),
-	}).Payload)))
-	fmt.Println(fmt.Sprintf("4、开始购买\n%s", string(checkInvoke(t, stub, [][]byte{
-		[]byte("createSellingByBuy"),
-		[]byte(realEstateList[0].RealEstateID), //销售对象(正在出售的房地产RealEstateID)
-		[]byte(realEstateList[0].Proprietor),   //卖家(卖家AccountId)
-		[]byte(realEstateList[2].Proprietor),   //买家(买家AccountId)
-	}).Payload)))
-	fmt.Println(fmt.Sprintf("》购买后再次查询%s的账户余额\n%s", realEstateList[2].Proprietor, string(checkInvoke(t, stub, [][]byte{
-		[]byte("queryAccountList"),
-		[]byte(realEstateList[2].Proprietor),
-	}).Payload)))
-	fmt.Println(fmt.Sprintf("》卖家查询购买成功信息\n%s", string(checkInvoke(t, stub, [][]byte{
-		[]byte("querySellingList"),
-		[]byte(realEstateList[0].Proprietor), //买家(买家AccountId)
-	}).Payload)))
-	fmt.Println(fmt.Sprintf("》买家查询购买成功信息\n%s", string(checkInvoke(t, stub, [][]byte{
-		[]byte("querySellingListByBuyer"),
-		[]byte(realEstateList[2].Proprietor), //买家(买家AccountId)
-	}).Payload)))
-	fmt.Println(fmt.Sprintf("》确认收款前卖家%s的账户余额\n%s", realEstateList[0].Proprietor, string(checkInvoke(t, stub, [][]byte{
-		[]byte("queryAccountList"),
-		[]byte(realEstateList[0].Proprietor),
-	}).Payload)))
-	fmt.Println(fmt.Sprintf("》确认收款前买家%s的账户余额\n%s", realEstateList[2].Proprietor, string(checkInvoke(t, stub, [][]byte{
-		[]byte("queryAccountList"),
-		[]byte(realEstateList[2].Proprietor),
-	}).Payload)))
-	fmt.Println(fmt.Sprintf("》确认收款前卖家%s的房产信息\n%s", realEstateList[0].Proprietor, string(checkInvoke(t, stub, [][]byte{
-		[]byte("queryRealEstateList"),
-		[]byte(realEstateList[0].Proprietor),
-	}).Payload)))
-	fmt.Println(fmt.Sprintf("》确认收款前买家%s的房产信息\n%s", realEstateList[2].Proprietor, string(checkInvoke(t, stub, [][]byte{
-		[]byte("queryRealEstateList"),
-		[]byte(realEstateList[2].Proprietor),
-	}).Payload)))
-	fmt.Println(fmt.Sprintf("》卖家确认收款\n%s", string(checkInvoke(t, stub, [][]byte{
-		[]byte("updateSelling"),
-		[]byte(realEstateList[0].RealEstateID), //销售对象(正在出售的房地产RealEstateID)
-		[]byte(realEstateList[0].Proprietor),   //卖家(卖家AccountId)
-		[]byte(realEstateList[2].Proprietor),   //买家(买家AccountId)
-		[]byte("done"),                         //确认收款
-	}).Payload)))
-	//fmt.Println(fmt.Sprintf("》卖家取消收款\n%s", string(checkInvoke(t, stub, [][]byte{
-	//	[]byte("updateSelling"),
-	//	[]byte(realEstateList[0].RealEstateID), //销售对象(正在出售的房地产RealEstateID)
-	//	[]byte(realEstateList[0].Proprietor),   //卖家(卖家AccountId)
-	//	[]byte(realEstateList[2].Proprietor),   //买家(买家AccountId)
-	//	[]byte("cancelled"),                    //取消收款
-	//}).Payload)))
-	fmt.Println(fmt.Sprintf("》确认收款后卖家%s的账户余额\n%s", realEstateList[0].Proprietor, string(checkInvoke(t, stub, [][]byte{
-		[]byte("queryAccountList"),
-		[]byte(realEstateList[0].Proprietor),
-	}).Payload)))
-	fmt.Println(fmt.Sprintf("》确认收款后买家%s的账户余额\n%s", realEstateList[2].Proprietor, string(checkInvoke(t, stub, [][]byte{
-		[]byte("queryAccountList"),
-		[]byte(realEstateList[2].Proprietor),
-	}).Payload)))
-	fmt.Println(fmt.Sprintf("》确认收款后卖家%s的房产信息\n%s", realEstateList[0].Proprietor, string(checkInvoke(t, stub, [][]byte{
-		[]byte("queryRealEstateList"),
-		[]byte(realEstateList[0].Proprietor),
-	}).Payload)))
-	fmt.Println(fmt.Sprintf("》确认收款后买家%s的房产信息\n%s", realEstateList[2].Proprietor, string(checkInvoke(t, stub, [][]byte{
-		[]byte("queryRealEstateList"),
-		[]byte(realEstateList[2].Proprietor),
-	}).Payload)))
-	fmt.Println(fmt.Sprintf("》卖家查询购买成功信息\n%s", string(checkInvoke(t, stub, [][]byte{
-		[]byte("querySellingList"),
-		[]byte(realEstateList[0].Proprietor), //买家(买家AccountId)
-	}).Payload)))
-	fmt.Println(fmt.Sprintf("》买家查询购买成功信息\n%s", string(checkInvoke(t, stub, [][]byte{
-		[]byte("querySellingListByBuyer"),
-		[]byte(realEstateList[2].Proprietor), //买家(买家AccountId)
-	}).Payload)))
-}
+	fmt.Println("\nTest: DownloadRecord")
 
-// 测试捐赠合约
-func Test_Donating(t *testing.T) {
-	stub := initTest(t)
-	realEstateList := checkCreateRealEstate(stub, t)
+	const dataset_owner = "test_user1"
+	const dataset_name = "test_dataset"
 
-	fmt.Println(fmt.Sprintf("获取房地产信息\n%s",
-		string(checkInvoke(t, stub, [][]byte{
-			[]byte("queryRealEstateList"),
-		}).Payload)))
-	//先发起
-	fmt.Println(fmt.Sprintf("发起捐赠\n%s", string(checkInvoke(t, stub, [][]byte{
-		[]byte("createDonating"),
-		[]byte(realEstateList[0].RealEstateID),
-		[]byte(realEstateList[0].Proprietor),
-		[]byte(realEstateList[2].Proprietor),
-	}).Payload)))
+	fmt.Printf("\n0a: CreateUser as dataset owner [success]\n%s",
+		string(checkInvoke(t, stub, true, [][]byte{
+			[]byte("createUser"),
+			[]byte("test_user1"),
+			[]byte("TestUser1"),
+		}).Payload))
 
-	fmt.Println(fmt.Sprintf("获取房地产信息\n%s",
-		string(checkInvoke(t, stub, [][]byte{
-			[]byte("queryRealEstateList"),
-		}).Payload)))
+	const sha256_a = "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9"
+	const sha256_b = "6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b"
 
-	fmt.Println(fmt.Sprintf("1、查询所有\n%s", string(checkInvoke(t, stub, [][]byte{
-		[]byte("queryDonatingList"),
-	}).Payload)))
-	fmt.Println(fmt.Sprintf("2、查询指定%s\n%s", realEstateList[0].Proprietor, string(checkInvoke(t, stub, [][]byte{
-		[]byte("queryDonatingList"),
-		[]byte(realEstateList[2].Proprietor),
-	}).Payload)))
-	fmt.Println(fmt.Sprintf("3、查询指定受赠%s\n%s", realEstateList[0].Proprietor, string(checkInvoke(t, stub, [][]byte{
-		[]byte("queryDonatingListByGrantee"),
-		[]byte(realEstateList[2].Proprietor),
-	}).Payload)))
+	fmt.Printf("\n0b: CreateFile x2 as dataset files [success]\n%s%s",
+		string(checkInvoke(t, stub, true, [][]byte{
+			[]byte("createFile"),
+			[]byte("test_file1"),
+			[]byte("1024"),
+			[]byte(sha256_a),
+		}).Payload),
+		string(checkInvoke(t, stub, true, [][]byte{
+			[]byte("createFile"),
+			[]byte("test_file2"),
+			[]byte("1025"),
+			[]byte(sha256_b),
+		}).Payload),
+	)
 
-	//fmt.Println(fmt.Sprintf("4、接受受赠%s\n%s", realEstateList[0].Proprietor, string(checkInvoke(t, stub, [][]byte{
-	//	[]byte("updateDonating"),
-	//	[]byte(realEstateList[0].RealEstateID),
-	//	[]byte(realEstateList[0].Proprietor),
-	//	[]byte(realEstateList[2].Proprietor),
-	//	[]byte("done"),
-	//}).Payload)))
-	fmt.Println(fmt.Sprintf("4、取消受赠%s\n%s", realEstateList[0].Proprietor, string(checkInvoke(t, stub, [][]byte{
-		[]byte("updateDonating"),
-		[]byte(realEstateList[0].RealEstateID),
-		[]byte(realEstateList[0].Proprietor),
-		[]byte(realEstateList[2].Proprietor),
-		[]byte("cancelled"),
-	}).Payload)))
+	dataset_version1 := model.DatasetVersion{
+		CreationTime: "2021-01-01T00:00:00Z",
+		ChangeLog:    "Initial version",
+		Rows:         100,
+		Files:        []string{sha256_a, sha256_b},
+	}
 
-	fmt.Println(fmt.Sprintf("获取房地产信息\n%s",
-		string(checkInvoke(t, stub, [][]byte{
-			[]byte("queryRealEstateList"),
-		}).Payload)))
+	fmt.Printf("\n0c: CreateDataset [success]\n%s",
+		string(checkInvoke(t, stub, true, [][]byte{
+			[]byte("createDataset"),
+			[]byte(dataset_owner),
+			[]byte(dataset_name),
+			[]byte(ToJson([]model.DatasetVersion{dataset_version1})),
+		}).Payload))
+
+	fmt.Printf("\n0d: CreateUser as downloader [success]\n%s",
+		string(checkInvoke(t, stub, true, [][]byte{
+			[]byte("createUser"),
+			[]byte("test_user2"),
+			[]byte("TestUser2"),
+		}).Payload))
+
+	fmt.Printf("\n1: CreateDownloadRecord [success]\n%s",
+		string(checkInvoke(t, stub, true, [][]byte{
+			[]byte("createDownloadRecord"),
+			[]byte(dataset_owner),
+			[]byte(dataset_name),
+			[]byte("test_user2"),
+			[]byte(ToJson([]string{sha256_a, sha256_b})),
+			[]byte("2021-01-01T00:00:00Z"),
+		}).Payload))
+
+	fmt.Printf("\n2: CreateDownloadRecord [failed] (dataset not exist)\n%s",
+		string(checkInvoke(t, stub, false, [][]byte{
+			[]byte("createDownloadRecord"),
+			[]byte(dataset_owner),
+			[]byte("test_dataset_not_exist"),
+			[]byte("test_user2"),
+			[]byte(ToJson([]string{sha256_a, sha256_b})),
+			[]byte("2021-01-01T00:00:00Z"),
+		}).Payload))
+
+	fmt.Printf("\n3: CreateDownloadRecord [failed] (invalid file hash)\n%s",
+		string(checkInvoke(t, stub, false, [][]byte{
+			[]byte("createDownloadRecord"),
+			[]byte(dataset_owner),
+			[]byte(dataset_name),
+			[]byte("test_user2"),
+			[]byte(ToJson([]string{sha256_a, "invalid_hash"})),
+			[]byte("2021-01-01T00:00:00Z"),
+		}).Payload))
+
+	fmt.Printf("\n4: CreateDownloadRecord [failed] (invalid download time)\n%s",
+		string(checkInvoke(t, stub, false, [][]byte{
+			[]byte("createDownloadRecord"),
+			[]byte(dataset_owner),
+			[]byte(dataset_name),
+			[]byte("test_user2"),
+			[]byte(ToJson([]string{sha256_a, sha256_b})),
+			[]byte("2021-01-01T00:00:00"),
+		}).Payload))
+
+	fmt.Printf("\n5: QueryDownloadRecordListByUser [success]\n%s",
+		string(checkInvoke(t, stub, true, [][]byte{
+			[]byte("queryDownloadRecordListByUser"),
+			[]byte("test_user2"),
+		}).Payload))
+
+	fmt.Printf("\n6: QueryDownloadRecordListByDataset [success]\n%s",
+		string(checkInvoke(t, stub, true, [][]byte{
+			[]byte("queryDownloadRecordListByDataset"),
+			[]byte(dataset_owner),
+			[]byte(dataset_name),
+		}).Payload))
 }

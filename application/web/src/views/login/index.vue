@@ -1,19 +1,21 @@
 <template>
   <div class="login-container">
     <el-form ref="loginForm" class="login-form" auto-complete="on" label-position="left">
-
+      <div class="example">
+        <h1 class='subtitle'>GenShIn</h1>
+      </div>
       <div class="title-container">
         <h3 class="title">基于区块链的AI训练数据共享系统</h3>
       </div>
       <el-select v-model="value" placeholder="请选择用户角色" class="login-select" @change="selectGet">
         <el-option
           v-for="item in accountList"
-          :key="item.accountId"
-          :label="item.userName"
-          :value="item.accountId"
+          :key="item.id"
+          :label="item.name"
+          :value="item.id"
         >
-          <span style="float: left">{{ item.userName }}</span>
-          <span style="float: right; color: #8492a6; font-size: 13px">{{ item.accountId }}</span>
+          <span style="float: left">{{ item.name }}</span>
+          <span style="float: right; color: #8492a6; font-size: 13px">{{ item.id }}</span>
         </el-option>
       </el-select>
 
@@ -50,32 +52,34 @@ export default {
   },
   created() {
     queryAccountList().then(response => {
-      if (response !== null) {
+      if (response) {
         this.accountList = response
-        this.$message('寄')
+        this.$message('数据加载成功')
       }
     })
   },
+
   methods: {
     handleLogin() {
       if (this.value) {
         this.loading = true
-        this.$store.dispatch('account/login', this.value).then(() => {
-          this.$router.push({ path: this.redirect || '/' })
+        this.$store.dispatch('account/login', this.value).then(path => {
+          this.$router.push({ path: path })
           this.loading = false
         }).catch(() => {
           this.loading = false
         })
       } else {
-        this.$message('请输入密码')
+        this.$message('请选择用户角色')
       }
     },
-    selectGet(accountId) {
-      this.value = accountId
+    selectGet(userId) {
+      this.value = userId
     }
   }
 }
 </script>
+
 
 <style lang="scss" scoped>
 $bg:#2d3a4b;
@@ -85,9 +89,22 @@ $light_gray:#eee;
 .login-container {
   min-height: 100%;
   width: 100%;
-  background-color: $bg;
+  background: url('https://c7k8t9m10.github.io/medias/featureimages/8.jpg');
+  width:100%;
+  height:100%;
+  position:fixed;
+  background-size:100% 100%;
   overflow: hidden;
-
+  .example {
+  font-family: 'alarm_clockregular', sans-serif;
+  .subtitle {
+      font-size: 30px;
+      color: #000000;
+      margin: 0px auto 40px auto;
+      text-align: center;
+      font-weight: bold;
+    }
+   }
   .login-form {
     position: relative;
     width: 520px;
@@ -100,7 +117,7 @@ $light_gray:#eee;
    padding: 20px 0px 30px 0px;
    min-height: 100%;
    width: 100%;
-   background-color: $bg;
+   background-color: transparent;
    overflow: hidden;
    text-align: center;
   }
