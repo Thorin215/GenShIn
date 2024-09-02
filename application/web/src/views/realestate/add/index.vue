@@ -7,8 +7,8 @@
 
       <el-form-item label="标签" prop="label">
         <el-select v-model="uploadForm.label" placeholder="选择标签">
-          <el-option :value="true" label="真"></el-option>
-          <el-option :value="false" label="假"></el-option>
+          <el-option :value="true" label="积极"></el-option>
+          <el-option :value="false" label="消极"></el-option>
         </el-select>
       </el-form-item>
 

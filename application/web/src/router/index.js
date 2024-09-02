@@ -103,46 +103,46 @@ export const asyncRoutes = [
     }
     ]
   },
-  // {
-  //   path: '/donating',
-  //   component: Layout,
-  //   redirect: '/donating/all',
-  //   name: 'Donating',
-  //   alwaysShow: true,
-  //   meta: {
-  //     title: '捐赠',
-  //     icon: 'donating'
-  //   },
-  //   children: [{
-  //     path: 'all',
-  //     name: 'DonatingAll',
-  //     component: () => import('@/views/donating/all/index'),
-  //     meta: {
-  //       title: '所有捐赠',
-  //       icon: 'donatingAll'
-  //     }
-  //   },
-  //   {
-  //     path: 'donor',
-  //     name: 'DonatingDonor',
-  //     component: () => import('@/views/donating/donor/index'),
-  //     meta: {
-  //       roles: ['editor'],
-  //       title: '我发起的捐赠',
-  //       icon: 'donatingDonor'
-  //     }
-  //   }, {
-  //     path: 'grantee',
-  //     name: 'DonatingGrantee',
-  //     component: () => import('@/views/donating/grantee/index'),
-  //     meta: {
-  //       roles: ['editor'],
-  //       title: '我收到的受赠',
-  //       icon: 'donatingGrantee'
-  //     }
-  //   }
-  //   ]
-  // },
+  {
+    path: '/donating',
+    component: Layout,
+    redirect: '/donating/all',
+    name: 'Donating',
+    alwaysShow: true,
+    meta: {
+      title: '更新',
+      icon: 'donating'
+    },
+    children: [{
+      path: 'all',
+      name: 'DonatingAll',
+      component: () => import('@/views/donating/all/index'),
+      meta: {
+        title: '更新数据集',
+        icon: 'donatingAll'
+      }
+    },
+    {
+      path: 'donor',
+      name: 'DonatingDonor',
+      component: () => import('@/views/donating/donor/index'),
+      meta: {
+        roles: ['editor'],
+        title: '我发起的捐赠',
+        icon: 'donatingDonor'
+      }
+    }, {
+      path: 'grantee',
+      name: 'DonatingGrantee',
+      component: () => import('@/views/donating/grantee/index'),
+      meta: {
+        roles: ['editor'],
+        title: '我收到的受赠',
+        icon: 'donatingGrantee'
+      }
+    }
+    ]
+  },
   {
     path: '/addRealestate',
     component: Layout,
