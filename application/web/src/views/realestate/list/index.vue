@@ -3,7 +3,7 @@
     <el-alert
       type="success"
     >
-      <p>账户ID: {{ accountId }}</p>
+      <p>账户ID: {{ userId }}</p>
       <!-- <p>用户名: {{ userName }}</p>
       <p>余额: ￥{{ balance }} 元</p> -->
       <!-- <p>当发起出售、捐赠或质押操作后，担保状态为true</p>
@@ -15,15 +15,14 @@
         type="warning"
       />
     </div> -->
-    <el-row v-loading="loading" :gutter="20">
+    <!-- <el-row v-loading="loading" :gutter="20">
       <el-col v-for="(val,index) in realEstateList" :key="index" :span="6" :offset="1">
         <el-card class="realEstate-card">
           <div slot="header" class="clearfix">
             担保状态:
             <span style="color: rgb(255, 0, 0);">{{ val.encumbrance }}</span>
           </div>
-
-          <div class="item">
+<div class="item"> 
             <el-tag>房产ID: </el-tag>
             <span>{{ val.realEstateId }}</span>
           </div>
@@ -38,17 +37,16 @@
           <div class="item">
             <el-tag type="danger">居住空间: </el-tag>
             <span>{{ val.livingSpace }} ㎡</span>
-          </div>
-
-          <div v-if="!val.encumbrance&&roles[0] !== 'admin'">
+          </div> -->
+          <!-- <div v-if="!val.encumbrance&&roles[0] !== 'admin'">
             <el-button type="text" @click="openDialog(val)">出售</el-button>
             <el-divider direction="vertical" />
             <el-button type="text" @click="openDonatingDialog(val)">捐赠</el-button>
-          </div>
-          <el-rate v-if="roles[0] === 'admin'" />
+          </div> -->
+          <!-- <el-rate v-if="roles[0] === 'admin'" />
         </el-card>
       </el-col>
-    </el-row>
+    </el-row> --> 
     <el-dialog v-loading="loadingDialog" :visible.sync="dialogCreateSelling" :close-on-click-modal="false" @close="resetForm('realForm')">
       <el-form ref="realForm" :model="realForm" :rules="rules" label-width="100px">
         <el-form-item label="价格 (元)" prop="price">

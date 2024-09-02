@@ -34,19 +34,19 @@ export function queryAccountList() {
   })
 }
 
-// 登录
-export function checkAccount(accountId) {
-  return request({
-    url: 'http://localhost:8888/api/v1/checkAccount',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    method: 'post',
-    data: { id: accountId }  // Pass accountId as part of the request body
-  })
-}
+// // 登录
+// export function checkAccount(accountId) {
+//   return request({
+//     url: 'http://localhost:8888/api/v1/checkAccount',
+//     headers: {
+//       'Content-Type': 'application/json'
+//     },
+//     method: 'post',
+//     data: { id: accountId }  // Pass accountId as part of the request body
+//   })
+// }
 
-// 登录
+// // 登录
 export function login(data) {
   return request({
     url: 'http://localhost:8888/api/v1/queryAccountList',
@@ -57,3 +57,14 @@ export function login(data) {
     data
   })
 }
+
+// export function login(data) {
+//   return request({
+//     url: 'http://localhost:8888/api/v1/checkAccount',
+//     headers: {
+//       'Content-Type': 'application/json'
+//     },
+//     method: 'post',
+//     data
+//   })
+// }

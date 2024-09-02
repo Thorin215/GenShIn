@@ -13,21 +13,39 @@ import (
 
 // Note: Use lowercase userID as key to avoid conflicts with same name
 
+// func getUser(stub shim.ChaincodeStubInterface, userID string) (model.User, error) {
+// 	userByte, err := utils.GetStateByKey(stub, model.UserKey, strings.ToLower(userID))
+// 	if err != nil {
+// 		return model.User{}, fmt.Errorf("GetUser-查询用户出错: %s", err)
+// 	}
+// 	if userByte == nil {
+// 		return model.User{}, fmt.Errorf("GetUser-用户不存在")
+// 	}
+// 	var user model.User
+// 	err = json.Unmarshal(userByte, &user)
+// 	if err != nil {
+// 		return model.User{}, fmt.Errorf("getUser-反序列化出错: %s", err)
+// 	}
+// 	return user, nil
+// }
+
 func getUser(stub shim.ChaincodeStubInterface, userID string) (model.User, error) {
 	userByte, err := utils.GetStateByKey(stub, model.UserKey, strings.ToLower(userID))
 	if err != nil {
-		return model.User{}, fmt.Errorf("GetUser-查询用户出错: %s", err)
+		return model.User{}, fmt.Errorf("GetUser-查询用户出错 (ID: %s): %s", userID, err)
 	}
 	if userByte == nil {
-		return model.User{}, fmt.Errorf("GetUser-用户不存在")
+		return model.User{}, fmt.Errorf("GetUser-用户不存在 (ID: %s)", userID)
 	}
 	var user model.User
 	err = json.Unmarshal(userByte, &user)
 	if err != nil {
-		return model.User{}, fmt.Errorf("getUser-反序列化出错: %s", err)
+		return model.User{}, fmt.Errorf("getUser-反序列化出错 (ID: %s): %s", userID, err)
 	}
 	return user, nil
 }
+
+
 func checkUserExist(stub shim.ChaincodeStubInterface, userID string) (bool, error) {
 	userByte, err := utils.GetStateByKey(stub, model.UserKey, strings.ToLower(userID))
 	if err != nil {

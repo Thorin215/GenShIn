@@ -12,13 +12,10 @@
         </div>
         <el-dropdown-menu slot="dropdown" class="user-dropdown">
           <el-dropdown-item>
-            账户ID: {{ accountId }}
+            账户ID: {{ userId }}
           </el-dropdown-item>
           <el-dropdown-item>
             用户名: {{ userName }}
-          </el-dropdown-item>
-          <el-dropdown-item>
-            余额: ￥{{ balance }} 元
           </el-dropdown-item>
           <a target="_blank" href="https://github.com/togettoyou/fabric-realty">
             <el-dropdown-item>项目地址</el-dropdown-item>
@@ -45,7 +42,7 @@ export default {
   computed: {
     ...mapGetters([
       'sidebar',
-      'accountId',
+      'userId',
       'userName',
       'balance'
     ])

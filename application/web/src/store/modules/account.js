@@ -49,8 +49,8 @@ const actions = {
           id: userId
         }]
       }).then(response => {
-        commit('SET_TOKEN', response[0].userId)
-        setToken(response[0].userId)
+        commit('SET_TOKEN', response[0].id)
+        setToken(response[0].id)
         resolve()
       }).catch(error => {
         reject(error)
@@ -58,24 +58,25 @@ const actions = {
     })
   },
   getInfo({
-    commit,
+    commit,  
     state
   }) {
     return new Promise((resolve, reject) => {
       login({
         args: [{
-          userId: state.token
+          id: state.token
+          // id: userId
         }]
       }).then(response => {
         var roles
-        if (response[0].userName === 'Admin') {
+        if (response[0].name === 'Admin') {
           roles = ['admin']
         } else {
           roles = ['admin'] //editor
         }
         commit('SET_ROLES', roles)
-        commit('SET_ACCOUNTID', response[0].userId)
-        commit('SET_USERNAME', response[0].userName)
+        commit('SET_ACCOUNTID', response[0].id)
+        commit('SET_USERNAME', response[0].name)
         resolve(roles)
       }).catch(error => {
         reject(error)
@@ -110,17 +111,10 @@ export default {
   mutations,
   actions
 }
-// import {
-//   login
-// } from '@/api/account'
-// import {
-//   getToken,
-//   setToken,
-//   removeToken
-// } from '@/utils/auth'
-// import {
-//   resetRouter
-// } from '@/router'
+
+// import { login } from '@/api/account';
+// import { getToken, setToken, removeToken } from '@/utils/auth';
+// import { resetRouter } from '@/router';
 
 // const getDefaultState = () => {
 //   return {
@@ -128,109 +122,101 @@ export default {
 //     userId: '',
 //     userName: '',
 //     roles: []
-//   }
-// }
+//   };
+// };
 
-// const state = getDefaultState()
+// const state = getDefaultState();
 
 // const mutations = {
 //   RESET_STATE: (state) => {
-//     Object.assign(state, getDefaultState())
+//     Object.assign(state, getDefaultState());
 //   },
 //   SET_TOKEN: (state, token) => {
-//     state.token = token
+//     state.token = token;
 //   },
 //   SET_ACCOUNTID: (state, userId) => {
-//     state.userId = userId
+//     state.userId = userId;
 //   },
 //   SET_USERNAME: (state, userName) => {
-//     state.userName = userName
+//     state.userName = userName;
 //   },
 //   SET_ROLES: (state, roles) => {
-//     state.roles = roles
+//     state.roles = roles;
 //   }
-// }
+// };
 
 // const actions = {
-//   login({
-//     commit,
-//     dispatch
-//   }, userId) {
+//   login({ commit }, userId) {
 //     return new Promise((resolve, reject) => {
 //       login({
-//         args: [{
-//           userId: userId
-//         }]
+//         args: [{ id: userId }]
 //       }).then(response => {
-//         commit('SET_TOKEN', response[0].userId)
-//         setToken(response[0].userId)
-//         // 在登录成功后获取用户信息
-//         dispatch('getInfo').then(roles => {
-//           if (roles.includes('admin')) {
-//             // 如果是管理员，跳转到管理员界面
-//             resolve('/admin')
-//           } else {
-//             // 否则跳转到默认界面
-//             resolve('/')
-//           }
-//         }).catch(error => {
-//           reject(error)
-//         })
-//       }).catch(error => {
-//         reject(error)
-//       })
-//     })
-//   },
-//   getInfo({
-//     commit,
-//     state
-//   }) {
-//     return new Promise((resolve, reject) => {
-//       login({
-//         args: [{
-//           userId: state.token
-//         }]
-//       }).then(response => {
-//         var roles
-//         if (response[0].userName === '管理员') {
-//           roles = ['admin']
+//         const data = response.data; // Access the data array
+//         const user = data.find(user => user.id === userId); // Find the specific user
+
+//         if (user) {
+//           commit('SET_TOKEN', user.id);
+//           setToken(user.id);
+//           resolve();
 //         } else {
-//           roles = ['editor']
+//           reject('User not found');
 //         }
-//         commit('SET_ROLES', roles)
-//         commit('SET_ACCOUNTID', response[0].userId)
-//         commit('SET_USERNAME', response[0].userName)
-//         resolve(roles)
 //       }).catch(error => {
-//         reject(error)
-//       })
-//     })
-//   },
-//   logout({
-//     commit
-//   }) {
-//     return new Promise(resolve => {
-//       removeToken()
-//       resetRouter()
-//       commit('RESET_STATE')
-//       resolve()
-//     })
+//         reject(error);
+//       });
+//     });
 //   },
 
-//   resetToken({
-//     commit
-//   }) {
+//   getInfo({ commit, state }) {
+//     return new Promise((resolve, reject) => {
+//       login({
+//         args: [{ id: state.token }]
+//       }).then(response => {
+//         const data = response.data; // Access the data array
+//         const user = data.find(user => user.id === state.token); // Find the specific user
+
+//         if (user) {
+//           var roles;
+//           if (user.name === 'Admin') {
+//             roles = ['admin'];
+//           } else {
+//             roles = ['editor']; // Adjust the role based on the user
+//           }
+//           commit('SET_ROLES', roles);
+//           commit('SET_ACCOUNTID', user.id);
+//           commit('SET_USERNAME', user.name);
+//           resolve(roles);
+//         } else {
+//           reject('User not found');
+//         }
+//       }).catch(error => {
+//         reject(error);
+//       });
+//     });
+//   },
+
+//   logout({ commit }) {
 //     return new Promise(resolve => {
-//       removeToken()
-//       commit('RESET_STATE')
-//       resolve()
-//     })
+//       removeToken(); // Must remove token first
+//       resetRouter(); // Then reset the router
+//       commit('RESET_STATE'); // Reset the state after logout
+//       resolve();
+//     });
+//   },
+
+//   resetToken({ commit }) {
+//     return new Promise(resolve => {
+//       removeToken();
+//       commit('RESET_STATE');
+//       resolve();
+//     });
 //   }
-// }
+// };
 
 // export default {
 //   namespaced: true,
 //   state,
 //   mutations,
 //   actions
-// }
+// };
+
