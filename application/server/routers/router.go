@@ -35,7 +35,7 @@ func InitRouter() *gin.Engine {
 		apiV1.POST("/uploadSet", v1.UploadSet) // 增加上传句子接口
 		apiV1.POST("/getalldataset",v1.GetAllDataSet)
 		apiV1.GET("/getChangeLog", v1.GetChangeLog)
-		//apiV1.POST("/updateVersion", v1.UpdateVersion)
+		apiV1.POST("/updateVersion", v1.UpdateVersion)
 	}
 	return r
 }

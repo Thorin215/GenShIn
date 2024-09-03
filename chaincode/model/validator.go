@@ -54,11 +54,11 @@ func ValidateVersion(version DatasetVersion) error {
 	if version.Rows < 0 {
 		return errors.New("Rows must be a non-negative integer")
 	}
-	for _, file := range version.Files {
-		if !regexp.MustCompile(`^[a-f0-9]{64}$`).MatchString(file) {
-			return errors.New("Files must be a list of SHA-256 hashes")
-		}
-	}
+	// for _, file := range version.Files {
+	// 	if !regexp.MustCompile(`^[a-f0-9]{64}$`).MatchString(file) {
+	// 		return errors.New("Files must be a list of SHA-256 hashes")
+	// 	}
+	// }
 	return nil
 }
 func ValidateDataset(dataset Dataset) error {

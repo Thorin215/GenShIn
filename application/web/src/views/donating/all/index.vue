@@ -60,14 +60,19 @@ export default {
       }
 
       const filesArray = this.files.split(',').map(file => file.trim())
+
+      // 获取当前时间并转换为 ISO 8601 格式
+      const isoDateString = new Date().toISOString().substring(0, 19) + 'Z'
+
       const dataToSubmit = { 
         name: this.name,
         owner: this.owner,
-        creation_time: new Date().toISOString(),
+        creation_time: isoDateString,  // 格式化后的时间字符串
         change_log: this.change_log,
         rows: this.rows,
         files: filesArray
       }
+
 
       // Use imported updateVersion API function
       updateVersion(dataToSubmit)

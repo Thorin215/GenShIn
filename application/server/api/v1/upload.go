@@ -124,56 +124,57 @@ func GetAllDataSet(c *gin.Context) {
 	appG.Response(http.StatusOK, "成功", datasets)
 }
 
-// // 辅助函数：将 DatasetVersion 转换为 JSON 字符串
-// func toJSONString(v interface{}) string {
-//     bytes, err := json.Marshal(v)
-//     if err != nil {
-//         return ""
-//     }
-//     return string(bytes)
-// }
+// UpdateVersion 更新数据集版本
+func UpdateVersion(c *gin.Context) {
+	appG := app.Gin{C: c}
 
+	// 定义请求体结构
+	type UpdateVersionRequest struct {
+		Owner        string   `json:"owner"`        // 所有者
+		Name         string   `json:"name"`         // 数据集名称
+		CreationTime string   `json:"creation_time"` // 创建时间
+		ChangeLog    string   `json:"change_log"`    // 版本说明
+		Rows         int32    `json:"rows"`          // 行数
+		Files        []string `json:"files"`         // 文件哈希列表
+	}
 
-// func writeDatasets(filePath string, datasets []Dataset) error {
-//     file, err := os.Create(filePath)
-//     if err != nil {
-//         return err
-//     }   
-//     defer file.Close()
+	body := new(UpdateVersionRequest)
+	if err := c.ShouldBindJSON(body); err != nil {
+		appG.Response(http.StatusBadRequest, "失败", fmt.Sprintf("参数错误: %s", err.Error()))
+		return
+	}
 
-//     encoder := json.NewEncoder(file)
-//     encoder.SetIndent("", "  ") // 设置格式化输出
-//     if err := encoder.Encode(datasets); err != nil {
-//         return err
-//     }
+	// 准备链码调用参数
+	version := DatasetVersion{
+		CreationTime: body.CreationTime,
+		ChangeLog:    body.ChangeLog,
+		Rows:         body.Rows,
+		Files:        body.Files,
+	}
+	versionBytes, err := json.Marshal(version)
+	if err != nil {
+		appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("版本序列化出错: %s", err.Error()))
+		return
+	}
 
-//     return nil
-// }
+	// 调用链码的 AppendDatasetVersion 函数
+	resp, err := bc.ChannelExecute("appendDatasetVersion", [][]byte{
+		[]byte(body.Owner),
+		[]byte(body.Name),
+		versionBytes,
+	})
+	if err != nil {
+		appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("调用链码出错: %s", err.Error()))
+        fmt.Println(resp)
+		return
+    }
 
-// func initializeFile(filePath string) error {
-//     return writeDatasets(filePath, []Dataset{})
-// }
-
-// func readDatasets(filePath string) ([]Dataset, error) {
-//     var datasets []Dataset
-//     file, err := os.Open(filePath)
-//     if err != nil {   
-//         if os.IsNotExist(err) {
-//             // 文件不存在，返回空数据集
-//             return datasets, nil
-//         }
-//         return nil, err
-//     }
-//     defer file.Close()
-
-//     decoder := json.NewDecoder(file)
-//     err = decoder.Decode(&datasets)
-//     if err != nil && err != io.EOF {
-//         return nil, err
-//     }
-
-//     return datasets, nil
-// }
+	// 成功响应
+	appG.Response(http.StatusOK, "成功", gin.H{
+		"dataset_name": body.Name,
+		"owner":        body.Owner,
+	})
+}
 
 // // UpdateVersion 更新数据集版本
 // func UpdateVersion(c *gin.Context) {
@@ -239,80 +240,4 @@ func GetAllDataSet(c *gin.Context) {
 //         "dataset_name": body.Name,
 //         "owner":        body.Owner,
 //     })
-// }
-
-// func GetAllDataSet(c *gin.Context) {
-// 	appG := app.Gin{C: c}
-//     dataFilePath := filepath.Join("data", "setRecord.json")
-
-//     datasets, err := readDatasets(dataFilePath)
-//     if err != nil {
-// 		appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("读取数据集时发生错误: %s", err.Error()))
-// 		return
-// 	}
-//     c.JSON(200, gin.H{
-// 		"code": 200,
-// 		"msg":  "success",
-// 		"data": datasets,
-// 	})
-// }
-
-// // UploadSet 处理数据集上传请求
-// func UploadSet(c *gin.Context) {
-// 	appG := app.Gin{C: c}
-// 	body := new(SetRequestBody)
-
-// 	// 解析请求体
-// 	if err := c.ShouldBindJSON(body); err != nil {
-// 		appG.Response(http.StatusBadRequest, "失败", fmt.Sprintf("参数错误: %s", err.Error()))
-// 		return
-// 	}
-
-// 	// 文件路径
-// 	filePath := filepath.Join("data", "setRecord.json")
-
-// 	// 读取现有数据集
-// 	datasets, err := readDatasets(filePath)
-// 	if err != nil {
-// 		appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("读取数据集时发生错误: %s", err.Error()))
-// 		return
-// 	}
-
-// 	// 检查是否存在相同数据集名称的记录
-// 	for _, dataset := range datasets {
-// 		if dataset.Name == body.Name {
-// 			appG.Response(http.StatusConflict, "失败", "数据集名称已存在")
-// 			return
-// 		}
-// 	}
-
-// 	// 创建新的数据集记录
-// 	newDataset := Dataset{
-// 		Owner:     body.Owner,
-// 		Name:      body.Name,
-// 		Metadata:  body.Metadata,
-// 		Versions: []DatasetVersion{
-// 			{   
-// 				CreationTime: body.CreationTime.Format(time.RFC3339), // 格式化时间
-// 				ChangeLog:    "initial version",                    // 默认版本说明
-// 				Rows:         body.Rows,                            // 设置行数
-// 				Files:        []string{"initial"},                   // 默认文件哈希列表
-// 			},
-// 		},
-// 	}
-
-// 	// 添加新的记录
-// 	datasets = append(datasets, newDataset)
-
-// 	// 写入数据集到文件
-// 	if err := writeDatasets(filePath, datasets); err != nil {
-// 		appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("写入数据集时发生错误: %s", err.Error()))
-// 		return
-// 	}
-
-// 	// 成功响应
-// 	appG.Response(http.StatusOK, "成功", gin.H{
-// 		"dataset_name":  newDataset.Name,
-// 		"owner":         newDataset.Owner,
-// 	})
 // }
