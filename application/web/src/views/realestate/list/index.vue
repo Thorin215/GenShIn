@@ -13,7 +13,7 @@
       >
         <h4>{{ dataset.name }}</h4>
         <p>所有者: {{ dataset.owner }}</p>
-        <el-button type="text" @click="viewLogs(dataset.name)">查看详情</el-button>
+        <el-button type="text" @click="viewLogs(dataset.name)">查看修改日志</el-button>
       </el-card>
     </div>
 

@@ -33,7 +33,7 @@ func QueryAccountList(c *gin.Context) {
 	for _, val := range body.Args {
 		bodyBytes = append(bodyBytes, []byte(val.ID))
 	}
-	
+	// fmt.Println(bodyBytes)
 	// 调用智能合约
 	resp, err := bc.ChannelQuery("queryUserList", bodyBytes)
 	if err != nil {
@@ -73,9 +73,6 @@ func CheckAccount(c *gin.Context) {
 
 	// 获取第一个元素的 ID
 	userID := body.Args[0].ID
-
-	// 打印提供给区块链的数据
-	fmt.Printf("提供给区块链的数据: %s\n", userID)
 
 	// 调用智能合约
 	resp, err := bc.ChannelQuery("queryUser", [][]byte{[]byte(userID)})

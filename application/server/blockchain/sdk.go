@@ -1,6 +1,8 @@
 package blockchain
 
 import (
+	"fmt"
+
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel"
 	"github.com/hyperledger/fabric-sdk-go/pkg/core/config"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk"
@@ -32,11 +34,13 @@ func Init() {
 // ChannelExecute 区块链交互
 func ChannelExecute(fcn string, args [][]byte) (channel.Response, error) {
 	// 创建客户端，表明在通道的身份
+	fmt.Println("fcn:", fcn)
 	ctx := sdk.ChannelContext(channelName, fabsdk.WithUser(user))
 	cli, err := channel.New(ctx)
 	if err != nil {
 		return channel.Response{}, err
 	}
+	fmt.Println("fcn_2:", fcn)
 	// 对区块链账本的写操作（调用了链码的invoke）
 	resp, err := cli.Execute(channel.Request{
 		ChaincodeID: chainCodeName,
@@ -46,6 +50,7 @@ func ChannelExecute(fcn string, args [][]byte) (channel.Response, error) {
 	if err != nil {
 		return channel.Response{}, err
 	}
+	fmt.Println("fcn_3:", fcn)
 	//返回链码执行后的结果
 	return resp, nil
 }

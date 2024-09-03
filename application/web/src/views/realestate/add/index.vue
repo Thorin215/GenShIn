@@ -1,5 +1,5 @@
 <template>
-  <div class="upload-container">
+  <!-- <div class="upload-container">
     <el-form ref="uploadForm" :model="uploadForm" label-width="100px" class="upload-form" @submit.native.prevent="submitForm">
       <el-form-item label="句子" prop="sentence">
         <el-input v-model="uploadForm.sentence" placeholder="输入句子"></el-input>
@@ -21,7 +21,7 @@
         <el-button @click="resetForm">重置</el-button>
       </el-form-item>
     </el-form>
-  </div>
+  </div> -->
 </template>
 
 <script>
