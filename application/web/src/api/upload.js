@@ -22,3 +22,14 @@ export function uploadSet(data) {
     data
   })
 }
+
+export function updateVersion(data) {
+  return request({
+    url: 'http://localhost:8888/api/v1/updateVersion',
+    method: 'post',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    data
+  })
+}

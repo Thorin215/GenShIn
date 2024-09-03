@@ -72,7 +72,7 @@ const actions = {
         if (response[0].name === 'Admin') {
           roles = ['admin']
         } else {
-          roles = ['admin'] //editor
+          roles = ['editor'] //editor
         }
         commit('SET_ROLES', roles)
         commit('SET_ACCOUNTID', response[0].id)
