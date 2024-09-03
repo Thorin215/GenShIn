@@ -7,7 +7,8 @@ import (
 	"fmt"
 	"net/http"
 	"time"
-
+	"os"
+    "io/ioutil"
 	"github.com/gin-gonic/gin"
 )
 
@@ -74,7 +75,7 @@ func UploadSet(c *gin.Context) {
         []byte(body.Name),
         []byte(ToJson(versions)), // 将 JSON 字符串转换为 []byte
     }
-    // fmt.Println(args)
+
     createResponse, err := bc.ChannelExecute("createDataset", args)
     if err != nil {
         appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("调用智能合约出错: %s", err.Error()))
@@ -85,6 +86,40 @@ func UploadSet(c *gin.Context) {
     payload := string(createResponse.Payload)
     if payload != "" {
         appG.Response(http.StatusInternalServerError, "失败", payload)
+        return
+    }
+
+    // 将数据集信息写入本地 JSON 文件
+    setRecord := map[string]interface{}{
+        "name":     body.Name,
+        "owner":    body.Owner,
+        "metadata": body.Metadata,
+    }
+
+    file, err := os.OpenFile("setRecord.json", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0644)
+    if err != nil {
+        appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("无法打开文件: %s", err.Error()))
+        return
+    }
+    defer file.Close()
+
+    // 将现有内容读入
+    var records []map[string]interface{}
+    fileContent, _ := os.ReadFile("setRecord.json")
+    if len(fileContent) > 0 {
+        json.Unmarshal(fileContent, &records)
+    }
+
+    // 添加新记录
+    records = append(records, setRecord)
+
+    // 写入文件
+    file.Truncate(0) // 清空文件内容
+    file.Seek(0, 0)  // 将文件指针移动到开头
+    encoder := json.NewEncoder(file)
+    encoder.SetIndent("", "  ")
+    if err := encoder.Encode(records); err != nil {
+        appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("写入文件失败: %s", err.Error()))
         return
     }
 
@@ -176,68 +211,73 @@ func UpdateVersion(c *gin.Context) {
 	})
 }
 
-// // UpdateVersion 更新数据集版本
-// func UpdateVersion(c *gin.Context) {
-//     appG := app.Gin{C: c}
-//     type UpdateVersionRequest struct {
-//         Name         string   `json:"name"`         // 数据集名称
-//         Owner        string   `json:"owner"`        // 所有者
-//         CreationTime string   `json:"creation_time"` // 创建时间
-//         ChangeLog    string   `json:"change_log"`    // 版本说明
-//         Rows         int32    `json:"rows"`          // 行数
-//         Files        []string `json:"files"`         // 文件哈希列表
-//     }
-    
-//     body := new(UpdateVersionRequest)
-//     if err := c.ShouldBindJSON(body); err != nil {
-//         appG.Response(http.StatusBadRequest, "失败", fmt.Sprintf("参数错误: %s", err.Error()))
-//         return
-//     }
+// GetDatasetMetadata 查询本地 setRecord.json 获取元数据
+func GetDatasetMetadata(c *gin.Context) {
+    appG := app.Gin{C: c}
+    var requestBody struct {
+        Owner string `json:"owner"`
+        Name  string `json:"name"`
+    }
 
-//     // 文件路径
-//     filePath := filepath.Join("data", "setRecord.json")
+    // 解析请求体
+    if err := c.BindJSON(&requestBody); err != nil {
+        appG.Response(http.StatusBadRequest, "失败", fmt.Sprintf("解析请求体失败: %s", err.Error()))
+        return
+    }
 
-//     // 读取现有数据集
-//     datasets, err := readDatasets(filePath)
-//     if err != nil {
-//         appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("读取数据集时发生错误: %s", err.Error()))
-//         return
-//     }
+    owner := requestBody.Owner
+    name := requestBody.Name
 
-//     // 查找目标数据集
-//     var dataset *Dataset
-//     for i := range datasets {
-//         if datasets[i].Name == body.Name && datasets[i].Owner == body.Owner {
-//             dataset = &datasets[i]
-//             break
-//         }
-//     }
+    if owner == "" || name == "" {
+        appG.Response(http.StatusBadRequest, "失败", "所有者和数据集名称不能为空")
+        return
+    }
 
-//     if dataset == nil {
-//         appG.Response(http.StatusNotFound, "失败", "数据集未找到")
-//         return
-//     }
+    // 读取本地 setRecord.json 文件
+    filePath := "setRecord.json" // 更新为 setRecord.json 文件的实际路径
+    fileContent, err := ioutil.ReadFile(filePath)
+    if err != nil {
+        appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("读取文件失败: %s", err.Error()))
+        return
+    }
 
-//     // 创建新的版本
-//     newVersion := DatasetVersion{
-//         CreationTime: body.CreationTime,
-//         ChangeLog:    body.ChangeLog,
-//         Rows:         body.Rows,
-//         Files:        body.Files,
-//     }
+    // 定义用于解析的临时结构体
+    var datasets []map[string]interface{}
 
-//     // 更新数据集的版本列表
-//     dataset.Versions = append(dataset.Versions, newVersion)
+    // 解析 JSON 文件内容
+    err = json.Unmarshal(fileContent, &datasets)
+    if err != nil {
+        appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("解析文件内容失败: %s", err.Error()))
+        return
+    }
 
-//     // 写入更新后的数据集到文件
-//     if err := writeDatasets(filePath, datasets); err != nil {
-//         appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("写入数据集时发生错误: %s", err.Error()))
-//         return
-//     }
+    // 查找匹配的 Dataset
+    for _, dataset := range datasets {
+        if dataset["owner"] == owner && dataset["name"] == name {
+            metadata, ok := dataset["metadata"].(map[string]interface{})
+            if !ok {
+                appG.Response(http.StatusInternalServerError, "失败", "元数据格式不正确")
+                return
+            }
 
-//     // 成功响应
-//     appG.Response(http.StatusOK, "成功", gin.H{
-//         "dataset_name": body.Name,
-//         "owner":        body.Owner,
-//     })
-// }
+            // 转换为 DatasetMetadata 结构体
+            var result DatasetMetadata
+            metadataBytes, err := json.Marshal(metadata)
+            if err != nil {
+                appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("转换元数据失败: %s", err.Error()))
+                return
+            }
+
+            err = json.Unmarshal(metadataBytes, &result)
+            if err != nil {
+                appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("解析元数据失败: %s", err.Error()))
+                return
+            }
+
+            appG.Response(http.StatusOK, "成功", result)
+            return
+        }
+    }
+
+    appG.Response(http.StatusNotFound, "失败", "数据集未找到")
+}

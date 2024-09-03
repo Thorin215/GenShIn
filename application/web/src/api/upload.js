@@ -33,3 +33,14 @@ export function updateVersion(data) {
     data
   })
 }
+
+export function getDatasetMetadata(data) {
+  return request({
+    url: 'http://localhost:8888/api/v1/getDatasetMetadata',
+    method: 'post',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    data
+  })
+}

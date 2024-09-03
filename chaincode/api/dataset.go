@@ -208,13 +208,13 @@ func AppendDatasetVersion(stub shim.ChaincodeStubInterface, args []string) pb.Re
 	}
 
 	/* ensure all files exist */
-	for _, fileHash := range version.Files {
-		if exist, err := checkFileExist(stub, fileHash); err != nil {
-			return shim.Error(fmt.Sprintf("UpdateDatasetVersions-查询文件出错: %s", err))
-		} else if !exist {
-			return shim.Error(fmt.Sprintf("UpdateDatasetVersions-参数错误: 文件不存在: %s", fileHash))
-		}
-	}
+	// for _, fileHash := range version.Files {
+	// 	if exist, err := checkFileExist(stub, fileHash); err != nil {
+	// 		return shim.Error(fmt.Sprintf("UpdateDatasetVersions-查询文件出错: %s", err))
+	// 	} else if !exist {
+	// 		return shim.Error(fmt.Sprintf("UpdateDatasetVersions-参数错误: 文件不存在: %s", fileHash))
+	// 	}
+	// }
 
 	if err := utils.WriteLedger(dataset, stub, model.DatasetKey, []string{dataset.Owner, dataset.Name}); err != nil {
 		return shim.Error(fmt.Sprintf("UpdateDatasetVersions-写入账本出错: %s", err))

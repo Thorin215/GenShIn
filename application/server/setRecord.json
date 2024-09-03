@@ -1,0 +1,23 @@
+[
+  {
+    "metadata": {
+      "tasks": [
+        "任务1",
+        "任务2",
+        "任务3"
+      ],
+      "modalities": [],
+      "formats": [],
+      "sub_tasks": null,
+      "languages": [],
+      "libraries": [],
+      "tags": [
+        "标签1",
+        "标签2"
+      ],
+      "license": ""
+    },
+    "name": "1040400",
+    "owner": "admin"
+  }
+]

@@ -10,17 +10,17 @@ export function GetAllDataSet(){
     },
   })
 }
-// 查询销售(可查询所有，也可根据发起销售人查询)(发起的)
-export function queryChangeLog(data) {
-  return request({
-    url: 'http://localhost:8888/api/v1/getChangeLog',
-    method: 'get',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    data
-  })
-}
+// // 查询销售(可查询所有，也可根据发起销售人查询)(发起的)
+// export function queryChangeLog(data) {
+//   return request({
+//     url: 'http://localhost:8888/api/v1/getChangeLog',
+//     method: 'post',
+//     headers: {
+//       'Content-Type': 'application/json'
+//     },
+//     data
+//   })
+// }
 
 // 根据参与销售人、买家(买家AccountId)查询销售(参与的)
 export function querySellingListByBuyer(data) {
