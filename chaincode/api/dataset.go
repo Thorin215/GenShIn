@@ -93,6 +93,36 @@ func CreateDataset(stub shim.ChaincodeStubInterface, args []string) pb.Response 
 	return shim.Success(nil)
 }
 
+// QueryDatasetFullList 查询数据集列表
+// return: []Dataset as JSON
+func QueryDatasetFullList(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+	if len(args) != 0 {
+			return shim.Error("QueryDatasetFullList-参数数量错误")
+	}
+
+	res, err := utils.GetStateByObjectType(stub, model.DatasetKey)
+	if err != nil {
+			return shim.Error(fmt.Sprintf("QueryDatasetFullList-查询数据集出错: %s", err))
+	}
+
+	var datasets []model.Dataset
+	for _, datasetByte := range res {
+			var dataset model.Dataset
+			err = json.Unmarshal(datasetByte, &dataset)
+			if err != nil {
+					return shim.Error(fmt.Sprintf("QueryDatasetFullList-反序列化出错: %s", err))
+			}
+			datasets = append(datasets, dataset)
+	}
+
+	datasetsByte, err := json.Marshal(datasets)
+	if err != nil {
+			return shim.Error(fmt.Sprintf("QueryDatasetFullList-序列化出错: %s", err))
+	}
+
+	return shim.Success(datasetsByte)
+}
+
 // QueryDataset 查询数据集信息
 // args[0]: 数据集所有者ID string
 // args[1]: 数据集名字 string

@@ -103,6 +103,27 @@ func ToJson(v interface{}) []byte {
 	return bytes
 }
 
+// GetAllDataSet 处理获取所有数据集请求
+func GetAllDataSet(c *gin.Context) {
+	appG := app.Gin{C: c}
+
+	// 调用链码的 QueryDatasetFullList 函数
+	resp, err := bc.ChannelQuery("queryDatasetFullList", nil)
+	if err != nil {
+		appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("调用智能合约出错: %s", err.Error()))
+		return
+	}
+
+	// 反序列化 JSON
+	var datasets []Dataset
+	if err = json.Unmarshal(resp.Payload, &datasets); err != nil {
+		appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("反序列化出错: %s", err.Error()))
+		return
+	}
+
+	appG.Response(http.StatusOK, "成功", datasets)
+}
+
 // // 辅助函数：将 DatasetVersion 转换为 JSON 字符串
 // func toJSONString(v interface{}) string {
 //     bytes, err := json.Marshal(v)

@@ -70,6 +70,8 @@ func (t *BlockChainGenshin) Invoke(stub shim.ChaincodeStubInterface) pb.Response
 		return api.QueryDownloadRecordListByUser(stub, args)
 	case "queryDownloadRecordListByDataset":
 		return api.QueryDownloadRecordListByDataset(stub, args)
+	case "queryDatasetFullList":
+		return api.QueryDatasetFullList(stub, args)
 	default:
 		return shim.Error(fmt.Sprintf("没有该功能: %s", funcName))
 	}
