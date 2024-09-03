@@ -9,17 +9,12 @@ import (
 	"os"
 	"path/filepath"
 	"time"
+	//"io/ioutil"
 	"io"
 	"github.com/gin-gonic/gin"
 )
 
-// SetRequestBody 用于接收账户ID和数据集的请求体
-type SetRequestBody struct {
-	Owner        string          `json:"owner"`
-	Name         string          `json:"name"`         // 数据集名称
-	CreationTime time.Time       `json:"creation_time"`
-	Metadata     DatasetMetadata `json:"metadata"`     // 元数据
-}
+
 
 // DatasetMetadata 数据集元数据
 type DatasetMetadata struct {
@@ -31,6 +26,15 @@ type DatasetMetadata struct {
 	Libraries  []string `json:"libraries"`  // 适用库
 	Tags       []string `json:"tags"`       // 标签
 	License    string   `json:"license"`    // 许可证
+}
+
+// SetRequestBody 用于接收账户ID和数据集的请求体
+type SetRequestBody struct {
+    Name          string                 `json:"Name"`
+    Owner         string                 `json:"Owner"`
+    CreationTime  time.Time              `json:"CreationTime"`
+    Rows          int32                    `json:"Rows"`
+	Metadata      DatasetMetadata          `json:"metadata"`     // 元数据
 }
 
 // Dataset 数据集
@@ -49,6 +53,21 @@ type DatasetVersion struct {
 	Files        []string `json:"files"`         // 文件哈希列表
 }
 
+func GetAllDataSet(c *gin.Context) {
+	appG := app.Gin{C: c}
+    dataFilePath := filepath.Join("data", "setRecord.json")
+
+    datasets, err := readDatasets(dataFilePath)
+    if err != nil {
+		appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("读取数据集时发生错误: %s", err.Error()))
+		return
+	}
+    c.JSON(200, gin.H{
+		"code": 200,
+		"msg":  "success",
+		"data": datasets,
+	})
+}
 // UploadSet 处理数据集上传请求
 func UploadSet(c *gin.Context) {
 	appG := app.Gin{C: c}
@@ -83,7 +102,14 @@ func UploadSet(c *gin.Context) {
 		Owner:     body.Owner,
 		Name:      body.Name,
 		Metadata:  body.Metadata,
-		Versions:  []DatasetVersion{}, // 初始时没有版本
+		Versions: []DatasetVersion{
+			{   
+				CreationTime: body.CreationTime.Format(time.RFC3339), // 格式化时间
+				ChangeLog:    "initial version",                    // 默认版本说明
+				Rows:         body.Rows,                            // 设置行数
+				Files:        []string{"initial"},                   // 默认文件哈希列表
+			},
+		},
 	}
 
 	// 添加新的记录
@@ -99,7 +125,6 @@ func UploadSet(c *gin.Context) {
 	appG.Response(http.StatusOK, "成功", gin.H{
 		"dataset_name":  newDataset.Name,
 		"owner":         newDataset.Owner,
-		// "creation_time": body.CreationTime, // 返回创建时间
 	})
 }
 
@@ -143,4 +168,70 @@ func readDatasets(filePath string) ([]Dataset, error) {
     }
 
     return datasets, nil
+}
+
+// UpdateVersion 更新数据集版本
+func UpdateVersion(c *gin.Context) {
+    appG := app.Gin{C: c}
+    type UpdateVersionRequest struct {
+        Name         string   `json:"name"`         // 数据集名称
+        Owner        string   `json:"owner"`        // 所有者
+        CreationTime string   `json:"creation_time"` // 创建时间
+        ChangeLog    string   `json:"change_log"`    // 版本说明
+        Rows         int32    `json:"rows"`          // 行数
+        Files        []string `json:"files"`         // 文件哈希列表
+    }
+    
+    body := new(UpdateVersionRequest)
+    if err := c.ShouldBindJSON(body); err != nil {
+        appG.Response(http.StatusBadRequest, "失败", fmt.Sprintf("参数错误: %s", err.Error()))
+        return
+    }
+
+    // 文件路径
+    filePath := filepath.Join("data", "setRecord.json")
+
+    // 读取现有数据集
+    datasets, err := readDatasets(filePath)
+    if err != nil {
+        appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("读取数据集时发生错误: %s", err.Error()))
+        return
+    }
+
+    // 查找目标数据集
+    var dataset *Dataset
+    for i := range datasets {
+        if datasets[i].Name == body.Name && datasets[i].Owner == body.Owner {
+            dataset = &datasets[i]
+            break
+        }
+    }
+
+    if dataset == nil {
+        appG.Response(http.StatusNotFound, "失败", "数据集未找到")
+        return
+    }
+
+    // 创建新的版本
+    newVersion := DatasetVersion{
+        CreationTime: body.CreationTime,
+        ChangeLog:    body.ChangeLog,
+        Rows:         body.Rows,
+        Files:        body.Files,
+    }
+
+    // 更新数据集的版本列表
+    dataset.Versions = append(dataset.Versions, newVersion)
+
+    // 写入更新后的数据集到文件
+    if err := writeDatasets(filePath, datasets); err != nil {
+        appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("写入数据集时发生错误: %s", err.Error()))
+        return
+    }
+
+    // 成功响应
+    appG.Response(http.StatusOK, "成功", gin.H{
+        "dataset_name": body.Name,
+        "owner":        body.Owner,
+    })
 }
