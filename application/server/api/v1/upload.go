@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"time"
+	//"io/ioutil"
 	"io"
 	"github.com/gin-gonic/gin"
 )
@@ -52,6 +53,21 @@ type DatasetVersion struct {
 	Files        []string `json:"files"`         // 文件哈希列表
 }
 
+func GetAllDataSet(c *gin.Context) {
+	appG := app.Gin{C: c}
+    dataFilePath := filepath.Join("data", "setRecord.json")
+
+    datasets, err := readDatasets(dataFilePath)
+    if err != nil {
+		appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("读取数据集时发生错误: %s", err.Error()))
+		return
+	}
+    c.JSON(200, gin.H{
+		"code": 200,
+		"msg":  "success",
+		"data": datasets,
+	})
+}
 // UploadSet 处理数据集上传请求
 func UploadSet(c *gin.Context) {
 	appG := app.Gin{C: c}
