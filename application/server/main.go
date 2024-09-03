@@ -1,28 +1,20 @@
 package main
 
 import (
-	"fmt"
-	"log"
-	"net/http"
-	"time"
-
+	v1 "application/api/v1"
 	"application/blockchain"
+	opLog "application/log"
 	"application/pkg/cron"
 	"application/routers"
 	"application/setting"
 	"application/sql"
-
-	// "github.com/jinzhu/gorm"
-	"application/model"
-
-	"gorm.io/gorm"
+	"fmt"
+	"log"
+	"net/http"
+	"time"
 )
 
 const DBfile = "./conf/config.ini"
-
-type TestData struct {
-	gorm.Model
-}
 
 func main() {
 	timeLocal, err := time.LoadLocation("Asia/Shanghai")
@@ -38,9 +30,8 @@ func main() {
 
 	sql.InitMysql(setting.Conf.MysqlConfig)
 
-	sql.DB.AutoMigrate(&TestData{})
-	sql.DB.AutoMigrate(&model.DataSet{})
-	sql.DB.AutoMigrate(&model.MetaData{})
+	sql.DB.AutoMigrate(&v1.MetadataToDB{})
+	sql.DB.AutoMigrate(&opLog.Log{})
 
 	blockchain.Init()
 	go cron.Init()

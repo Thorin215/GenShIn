@@ -6,10 +6,10 @@ import (
 )
 
 type Log struct {
-	LogID     int32     `json:"logID"`
-	DataSetID int32     `json:"dataSetID"`
-	ChangeLog string    `json:"changeLog"`
-	TimeStemp time.Time `json:"timeStemp"`
+	LogID     int32     `json:"log_id" gorm:"primaryKey"`
+	DataSetID int32     `json:"data_set_id"`
+	ChangeLog string    `json:"change_log"`
+	TimeStemp time.Time `json:"time_stemp"`
 }
 
 func GetLog(dataSetID int32) ([]Log, error) {

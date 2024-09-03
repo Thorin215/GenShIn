@@ -18,7 +18,9 @@ export function queryChangeLog(data) {
     headers: {
       'Content-Type': 'application/json'
     },
-    data
+    params:{
+    data_set_id:data
+    }
   })
 }
 

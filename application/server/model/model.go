@@ -89,16 +89,8 @@ type MetaData struct {
 	Rows       int32  `json:"rows"`
 }
 
-func CreateDataSet(dataSet *DataSet, metaData *MetaData) error {
-	error := sql.DB.Transaction(func(tx *gorm.DB) error {
-		if err := tx.Create(dataSet).Error; err != nil {
-			return err
-		}
-		if err := tx.Create(metaData).Error; err != nil {
-			return err
-		}
-		return nil
-	})
+func CreateDataSet(dataSet *DataSet) error {
+	error := sql.DB.Create(dataSet).Error
 	return error
 }
 

@@ -13,17 +13,17 @@
       >
         <h4>{{ dataset.name }}</h4>
         <p>所有者: {{ dataset.owner }}</p>
-        <el-button type="text" @click="viewLogs(dataset.name)">查看详情</el-button>
+        <el-button type="text" @click="viewLogs(dataset.data_set_id)">查看详情</el-button>
       </el-card>
     </div>
 
     <!-- 日志对话框 -->
     <el-dialog title="修改日志" :visible.sync="dialogVisible" width="60%" @close="closeDialog">
       <el-table :data="logs" style="width: 100%">
-        <el-table-column prop="LogID" label="日志ID"></el-table-column>
-        <el-table-column prop="DataSetID" label="数据集ID"></el-table-column>
-        <el-table-column prop="ChangeLog" label="变更日志"></el-table-column>
-        <el-table-column prop="TimeStemp" label="时间戳"></el-table-column>
+        <el-table-column prop="log_id" label="日志ID"></el-table-column>
+        <el-table-column prop="data_set_id" label="数据集ID"></el-table-column>
+        <el-table-column prop="change_log" label="变更日志"></el-table-column>
+        <el-table-column prop="time_stemp" label="时间戳"></el-table-column>
       </el-table>
       <span slot="footer" class="dialog-footer">
         <el-button @click="dialogVisible = false">返回</el-button>
@@ -65,13 +65,14 @@ export default {
         this.$message.error('数据加载失败');
       }
     },
-    async viewLogs(dataSetName) {
+    async viewLogs(dataSetID) {
       try {
-        const response = await queryChangeLog(dataSetName);
-        console.log(dataSetName);
+        const response = await queryChangeLog(dataSetID);
+        console.log(dataSetID);
         this.logs = response;
         // 逻辑处理，例如打开一个对话框显示日志
-        console.log('Logs for dataset:', this.logs);
+        console.log("log:"+response);
+        console.log('Logs for dataset:'+this.logs);
         this.dialogVisible = true;
       } catch (error) {
         console.error('Error fetching logs:', error);
