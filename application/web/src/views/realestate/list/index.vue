@@ -4,17 +4,20 @@
       <p>账户ID: {{ userId }}</p>
     </el-alert>
     <div class="dataset-grid">
-      <el-card
-        v-for="dataset in datasets"
-        :key="dataset.name"
-        class="dataset-card"
-      >
-        <h4>{{ dataset.name }}</h4>
-        <p>所有者: {{ dataset.owner }}</p>
-        <el-button type="text" @click="viewLogs(dataset)">查看修改日志</el-button>
-        <el-button type="text" @click="viewMetadata(dataset)">查看详细信息</el-button>
-      </el-card>
+  <el-card
+    v-for="dataset in datasets"
+    :key="dataset.name"
+    class="dataset-card"
+  >
+    <h4 class="dataset-name">{{ dataset.name }}</h4>
+    <p class="dataset-owner">所有者: {{ dataset.owner }}</p>
+    <div class="dataset-actions">
+      <el-button type="primary" icon="el-icon-download" @click="DownloadDatasets(dataset.name, userId)">下载</el-button>
+      <el-button type="success" icon="el-icon-edit" @click="viewLogs(dataset)">查看修改日志</el-button>
+      <el-button type="info" icon="el-icon-info" @click="viewMetadata(dataset)">查看详细信息</el-button>
     </div>
+  </el-card>
+</div>
 
     <!-- 修改日志对话框 -->
     <el-dialog title="修改日志" :visible.sync="dialogVisible" width="60%" @close="closeDialog">
@@ -70,7 +73,7 @@
 <script>
 import { mapGetters } from 'vuex';
 import { GetAllDataSet } from '@/api/datasets';
-import { getDatasetMetadata } from '@/api/upload';
+import { getDatasetMetadata, DownloadDatasets } from '@/api/upload';
 export default {
   name: 'DataSetsTable',
   data() {
@@ -117,6 +120,29 @@ export default {
         this.$message.error('获取元数据失败');
       }
     },
+    async DownloadDatasets(dataSetName) {
+    const userId = this.userId; // 从 Vuex 获取用户 ID
+    const timestamp = new Date().getTime(); // 获取当前时间戳
+    try {
+      // 调用后端 API 来处理下载请求
+      const response = await DownloadDataset({
+        name: dataSetName,
+        userId: userId,
+        timestamp: timestamp
+      });
+      // 处理响应，例如重定向到下载链接或显示下载信息
+      console.log('Download response:', response);
+      if (response && response.data && response.data.downloadUrl) {
+        // 假设后端返回一个包含下载链接的响应
+        window.location.href = response.data.downloadUrl;
+      } else {
+        this.$message.error('下载请求失败');
+      }
+    } catch (error) {
+      console.error('Error initiating download:', error);
+      this.$message.error('下载请求失败');
+    }
+  },
     closeDialog() {
       this.dialogVisible = false;
       this.logs = []; // 清空日志数据
@@ -137,17 +163,47 @@ export default {
   overflow: hidden;
 }
 
-.dataset-card {
-  margin-bottom: 20px;
-  cursor: pointer;
+.dataset-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px; /* 间距 */
+  justify-content: center;
 }
 
-.dataset-grid {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr); /* 创建5列 */
-  gap: 20px; /* 设置间隙 */
-  margin-top: 50px;
-  margin-left: 100px;
-  width: 80%;
+.dataset-card {
+  width: calc(33% - 20px); /* 每个卡片占据三分之一的宽度，减去间距 */
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1); /* 阴影效果 */
+  transition: transform 0.3s ease-in-out; /* 平滑过渡效果 */
+}
+
+.dataset-card:hover {
+  transform: translateY(-5px); /* 鼠标悬停时上移 */
+}
+
+.dataset-name {
+  margin: 0;
+  font-size: 1.25rem;
+  color: #333;
+}
+
+.dataset-owner {
+  font-size: 0.875rem;
+  color: #666;
+  margin: 10px 0;
+}
+
+.dataset-actions {
+  display: flex;
+  gap: 10px; /* 按钮之间的间距 */
+}
+
+.el-button {
+  flex: 1; /* 按钮平分空间 */
+  text-align: left; /* 文字左对齐 */
+  padding: 10px 15px; /* 增加内边距 */
+}
+
+.el-button i {
+  margin-right: 8px; /* 图标与文字之间的间距 */
 }
 </style>

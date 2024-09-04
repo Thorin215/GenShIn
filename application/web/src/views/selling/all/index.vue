@@ -166,14 +166,14 @@ export default {
         tags: [],
         license: ''
       },
-      availableTasks: ['任务1', '任务2', '任务3'],  // 示例数据
-      availableModalities: ['模态1', '模态2', '模态3'],  // 示例数据
-      availableFormats: ['格式1', '格式2', '格式3'],  // 示例数据
-      availableSubTasks: ['子任务1', '子任务2', '子任务3'],  // 示例数据
-      availableLanguages: ['语言1', '语言2', '语言3'],  // 示例数据
-      availableLibraries: ['库1', '库2', '库3'],  // 示例数据
-      availableTags: ['标签1', '标签2', '标签3'],  // 示例数据
-      availableLicenses: ['许可证1', '许可证2', '许可证3']  // 示例数据
+availableTasks: ['图像识别', '文本摘要', '语音合成'],  // 示例数据
+availableModalities: ['视觉', '文本', '声音'],  // 示例数据
+availableFormats: ['PNG', 'CSV', 'WAV'],  // 示例数据
+availableSubTasks: ['面部识别', '情感分析', '语音到文本'],  // 示例数据
+availableLanguages: ['英语', '中文', '法语'],  // 示例数据
+availableLibraries: ['TensorFlow', 'PyTorch', 'Keras'],  // 示例数据
+availableTags: ['机器学习', '深度学习', '自然语言处理'],  // 示例数据
+availableLicenses: ['MIT License', 'Apache License', 'GNU General Public License (GPL)']  // 示例数据
     }
   },
   computed: {
