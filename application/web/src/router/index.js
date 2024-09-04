@@ -111,7 +111,7 @@ export const asyncRoutes = [
     alwaysShow: true,
     meta: {
       title: '更新',
-      icon: 'donating'
+      icon: 'new4'
     },
     children: [{
       path: 'all',
@@ -119,7 +119,7 @@ export const asyncRoutes = [
       component: () => import('@/views/donating/all/index'),
       meta: {
         title: '更新数据集',
-        icon: 'donatingAll'
+        icon: 'pen'
       }
     },
     {
