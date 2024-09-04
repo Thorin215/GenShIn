@@ -6,6 +6,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+    "crypto/sha256"
+	"encoding/hex"
+	"io"
 	"time"
 	"os"
     "io/ioutil"
@@ -31,6 +34,7 @@ type SetRequestBody struct {
     CreationTime  time.Time              `json:"CreationTime"`
     Rows          int32                  `json:"Rows"`
 	Metadata      DatasetMetadata        `json:"metadata"`     // 元数据
+    Files        []string                `json:"files"`         // 文件哈希列表
 }
 
 // Dataset 数据集
@@ -280,4 +284,64 @@ func GetDatasetMetadata(c *gin.Context) {
     }
 
     appG.Response(http.StatusNotFound, "失败", "数据集未找到")
+}
+
+type DatasetFile struct {
+	Hash     string `json:"hash"`     // 文件哈希 (key)
+	FileName string `json:"filename"` // 文件名
+	Size     int64  `json:"size"`     // 文件大小
+}
+
+func UploadFile(c *gin.Context) {
+	appG := app.Gin{C: c}
+    fmt.Println("UploadFile")
+	// 获取文件
+	file, header, err := c.Request.FormFile("file")
+	if err != nil {
+		appG.Response(http.StatusBadRequest, "失败", fmt.Sprintf("无法获取文件: %s", err.Error()))
+		return
+	}
+	defer file.Close()
+
+	// 计算文件的 SHA-256 哈希值
+	hash := sha256.New()
+	if _, err := io.Copy(hash, file); err != nil {
+		appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("计算哈希值出错: %s", err.Error()))
+		return
+	}
+	hashSum := hash.Sum(nil)
+	hashString := hex.EncodeToString(hashSum)
+
+	// 获取文件大小
+	fileSize := header.Size
+
+	// 创建 DatasetFile 对象
+	datasetFile := DatasetFile{
+		Hash:     hashString,
+		FileName: header.Filename,
+		Size:     fileSize,
+	}
+
+	// 将文件信息存储到链上
+	args := [][]byte{
+		[]byte(datasetFile.FileName),
+		[]byte(fmt.Sprintf("%d", datasetFile.Size)),
+		[]byte(datasetFile.Hash),
+	}
+
+	createResponse, err := bc.ChannelExecute("createFile", args)
+	if err != nil {
+		appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("调用智能合约出错: %s", err.Error()))
+		return
+	}
+
+	// 检查链码响应
+	payload := string(createResponse.Payload)
+	if payload != "" {
+		appG.Response(http.StatusInternalServerError, "失败", payload)
+		return
+	}
+
+	// 返回结果
+	appG.Response(http.StatusOK, "成功", datasetFile)
 }

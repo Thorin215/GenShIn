@@ -11,7 +11,6 @@ import (
 )
 
 type AccountIdBody struct {
-	//AccountId string `json:"accountId"`
 	ID  string `json:"id"`  // 用户ID
 	Name string `json:"name"` // 用户名
 }

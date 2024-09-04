@@ -54,7 +54,7 @@ export default {
     queryAccountList().then(response => {
       if (response) {
         this.accountList = response
-        this.$message('数据加载成功')
+        this.$message.success('数据加载成功')
       }
     })
   },

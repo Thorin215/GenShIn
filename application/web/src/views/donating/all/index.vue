@@ -23,7 +23,6 @@
 
 <script>
 import { mapGetters } from 'vuex'
-// import { queryDonatingList, updateDonating } from '@/api/donating'
 import { updateVersion } from '@/api/upload'
 
 export default {
