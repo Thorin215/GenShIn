@@ -376,7 +376,7 @@ func UploadFile(c *gin.Context) {
     // 返回结果
     appG.Response(http.StatusOK, "成功", datasetFile)
 }
-
+/*Json Base64 Version*/
 func DownloadDataSet(c *gin.Context) {
     appG := app.Gin{C: c}
     body := new(struct {

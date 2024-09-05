@@ -157,13 +157,13 @@ export default {
         const response3 = await downloadDataset({
           files: files,
           name: this.selectedDataset.name,
-          owner: this.selectedDataset.owner, 
+          user: this.userId,
         });
-        log.console('response3', response3);
-        this.$message('加载完成');
+        console.log(response3);
+        this.$message.success('加载完成');
 
         // 从响应中提取文件内容和文件名
-        const { files: fileData } = response3.data;
+        const { files: fileData } = response3;
         if (fileData && fileData.length > 0) {
           const file = fileData[0];
           const { filename, content } = file;
