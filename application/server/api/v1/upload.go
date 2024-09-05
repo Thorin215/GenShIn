@@ -50,6 +50,15 @@ type Dataset struct {
 	Versions  []DatasetVersion `json:"versions"` // 版本列表
 }
 
+// Dataset 数据集
+type DatasetD struct {
+	Owner     string `json:"owner"`     // 所有者ID
+	Name      string `json:"name"`      // 数据集名
+	Downloads int32  `json:"downloads"` // 下载次数
+	Metadata  DatasetMetadata  `json:"metadata"`  // 元数据
+	Versions []DatasetVersion `json:"versions"` // 版本列表
+}
+
 // DatasetVersion 数据集一个版本
 type DatasetVersion struct {
 	CreationTime string   `json:"creation_time"` // 创建时间
@@ -160,7 +169,7 @@ func GetAllDataSet(c *gin.Context) {
 	}
 
 	// 反序列化 JSON
-	var datasets []Dataset
+	var datasets []DatasetD
 	if err = json.Unmarshal(resp.Payload, &datasets); err != nil {
 		appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("反序列化出错: %s", err.Error()))
 		return
@@ -471,6 +480,18 @@ func DownloadDataSet(c *gin.Context) {
 
     // Base64 编码压缩包内容
     encodedZipContent := base64.StdEncoding.EncodeToString(zipContent)
+
+    args := [][]byte{
+        []byte(body.Owner),
+        []byte(body.Name),
+    }
+
+    // 调用智能合约追加下载记录
+    resp, err = bc.ChannelExecute("increaseDatasetDownloads", args)
+    if err != nil {
+        appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("调用智能合约出错: %s", err.Error()))
+        return
+    }
 
     // 返回 JSON 响应
     appG.Response(http.StatusOK, "成功", map[string]interface{}{

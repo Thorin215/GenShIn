@@ -8,6 +8,7 @@
       >
         <h4 class="dataset-name">{{ dataset.name }}</h4>
         <p class="dataset-owner">所有者: {{ dataset.owner }}</p>
+        <p class="dataset-downloads">下载次数 : {{ dataset.downloads }}</p>
         <div class="dataset-actions">
           <!-- Removed download button -->
           <el-button type="success" icon="el-icon-edit" @click="viewLogs(dataset)">查看修改日志</el-button>
@@ -157,7 +158,7 @@ export default {
         const response3 = await downloadDataset({
           files: files,
           name: this.selectedDataset.name,
-          user: this.userId,
+          owner: this.selectedDataset.owner,
         });
         console.log(response3);
         this.$message.success('加载完成');
@@ -237,6 +238,12 @@ export default {
 }
 
 .dataset-owner {
+  font-size: 0.875rem;
+  color: #666;
+  margin: 10px 0;
+}
+
+.dataset-downloads {
   font-size: 0.875rem;
   color: #666;
   margin: 10px 0;

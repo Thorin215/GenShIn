@@ -81,25 +81,6 @@ export const asyncRoutes = [
         title: '新建数据集',
         icon: 'new2'
       }
-    },
-    {
-      path: 'me',
-      name: 'SellingMe',
-      component: () => import('@/views/selling/me/index'),
-      meta: {
-        roles: ['editor'],
-        title: '我发起的',
-        icon: 'sellingMe'
-      }
-    }, {
-      path: 'buy',
-      name: 'SellingBuy',
-      component: () => import('@/views/selling/buy/index'),
-      meta: {
-        roles: ['editor'],
-        title: '我购买的',
-        icon: 'sellingBuy'
-      }
     }
     ]
   },
@@ -121,45 +102,9 @@ export const asyncRoutes = [
         title: '更新数据集',
         icon: 'pen'
       }
-    },
-    {
-      path: 'donor',
-      name: 'DonatingDonor',
-      component: () => import('@/views/donating/donor/index'),
-      meta: {
-        roles: ['editor'],
-        title: '我发起的捐赠',
-        icon: 'donatingDonor'
-      }
-    }, {
-      path: 'grantee',
-      name: 'DonatingGrantee',
-      component: () => import('@/views/donating/grantee/index'),
-      meta: {
-        roles: ['editor'],
-        title: '我收到的受赠',
-        icon: 'donatingGrantee'
-      }
     }
     ]
   },
-  {
-    path: '/addRealestate',
-    component: Layout,
-    meta: {
-      roles: ['admin']
-    },
-    children: [{
-      path: '/addRealestate',
-      name: 'AddRealestate',
-      component: () => import('@/views/realestate/add/index'),
-      meta: {
-        title: '新增数据',
-        icon: 'new4'
-      }
-    }]
-  },
-
   // 404 page must be placed at the end !!!
   {
     path: '*',
