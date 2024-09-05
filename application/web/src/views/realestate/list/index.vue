@@ -153,12 +153,13 @@ export default {
     async downloadFiles(files) {
       try {
         this.$message('加载');
+        //log.console('files', files);
         const response3 = await downloadDataset({
           files: files,
           name: this.selectedDataset.name,
-          owner: this.selectedDataset.owner,
+          owner: this.selectedDataset.owner, 
         });
-
+        log.console('response3', response3);
         this.$message('加载完成');
 
         // 从响应中提取文件内容和文件名
