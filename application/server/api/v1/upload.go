@@ -11,8 +11,13 @@ import (
 	"io"
 	"time"
 	"os"
+    "archive/zip"
+    // "bytes"
     "io/ioutil"
 	"github.com/gin-gonic/gin"
+    "path/filepath"
+    // "mime"
+    "encoding/base64"
 )
 
 // DatasetMetadata 数据集元数据
@@ -62,14 +67,15 @@ func UploadSet(c *gin.Context) {
         appG.Response(http.StatusBadRequest, "失败", fmt.Sprintf("参数错误: %s", err.Error()))
         return
     }
-
+    fmt.Println(body.Name)
+    fmt.Println(body.Files)
     // 构造 DatasetVersion 列表
     versions := []DatasetVersion{
         {
             CreationTime: body.CreationTime.Format(time.RFC3339),
-            ChangeLog:    "initial version",
+            ChangeLog:    "Initial Version",
             Rows:         body.Rows,
-            Files:        []string{},
+            Files:        body.Files,
         },
     }
 
@@ -100,7 +106,7 @@ func UploadSet(c *gin.Context) {
         "metadata": body.Metadata,
     }
 
-    file, err := os.OpenFile("setRecord.json", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0644)
+    file, err := os.OpenFile("data/setRecord.json", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0644)
     if err != nil {
         appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("无法打开文件: %s", err.Error()))
         return
@@ -109,7 +115,7 @@ func UploadSet(c *gin.Context) {
 
     // 将现有内容读入
     var records []map[string]interface{}
-    fileContent, _ := os.ReadFile("setRecord.json")
+    fileContent, _ := os.ReadFile("data/setRecord.json")
     if len(fileContent) > 0 {
         json.Unmarshal(fileContent, &records)
     }
@@ -238,7 +244,7 @@ func GetDatasetMetadata(c *gin.Context) {
     }
 
     // 读取本地 setRecord.json 文件
-    filePath := "setRecord.json" // 更新为 setRecord.json 文件的实际路径
+    filePath := "data/setRecord.json" // 更新为 setRecord.json 文件的实际路径
     fileContent, err := ioutil.ReadFile(filePath)
     if err != nil {
         appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("读取文件失败: %s", err.Error()))
@@ -293,55 +299,188 @@ type DatasetFile struct {
 }
 
 func UploadFile(c *gin.Context) {
-	appG := app.Gin{C: c}
-    fmt.Println("UploadFile")
-	// 获取文件
-	file, header, err := c.Request.FormFile("file")
-	if err != nil {
-		appG.Response(http.StatusBadRequest, "失败", fmt.Sprintf("无法获取文件: %s", err.Error()))
-		return
-	}
-	defer file.Close()
+    appG := app.Gin{C: c}
+    
+    // 获取文件
+    file, header, err := c.Request.FormFile("file")
+    if err != nil {
+        appG.Response(http.StatusBadRequest, "失败", fmt.Sprintf("无法获取文件: %s", err.Error()))
+        return
+    }
+    defer file.Close()
 
-	// 计算文件的 SHA-256 哈希值
-	hash := sha256.New()
-	if _, err := io.Copy(hash, file); err != nil {
-		appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("计算哈希值出错: %s", err.Error()))
-		return
-	}
-	hashSum := hash.Sum(nil)
-	hashString := hex.EncodeToString(hashSum)
+    // 计算文件的 SHA-256 哈希值
+    hash := sha256.New()
+    if _, err := io.Copy(hash, file); err != nil {
+        appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("计算哈希值出错: %s", err.Error()))
+        return
+    }
+    hashSum := hash.Sum(nil)
+    hashString := hex.EncodeToString(hashSum)
 
-	// 获取文件大小
-	fileSize := header.Size
+    // 获取文件大小
+    fileSize := header.Size
 
-	// 创建 DatasetFile 对象
-	datasetFile := DatasetFile{
-		Hash:     hashString,
-		FileName: header.Filename,
-		Size:     fileSize,
-	}
+    // 创建 DatasetFile 对象
+    datasetFile := DatasetFile{
+        Hash:     hashString,
+        FileName: header.Filename,
+        Size:     fileSize,
+    }
 
-	// 将文件信息存储到链上
-	args := [][]byte{
-		[]byte(datasetFile.FileName),
-		[]byte(fmt.Sprintf("%d", datasetFile.Size)),
-		[]byte(datasetFile.Hash),
-	}
+    // 重新打开文件
+    file.Seek(0, io.SeekStart)
+    
+    // 创建目录（如果不存在）
+    dir := "data/Files"
+    if err := os.MkdirAll(dir, os.ModePerm); err != nil {
+        appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("创建目录出错: %s", err.Error()))
+        return
+    }
 
-	createResponse, err := bc.ChannelExecute("createFile", args)
-	if err != nil {
-		appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("调用智能合约出错: %s", err.Error()))
-		return
-	}
+    // 保存文件到本地路径
+    filePath := filepath.Join(dir, header.Filename)
+    outFile, err := os.Create(filePath)
+    if err != nil {
+        appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("保存文件出错: %s", err.Error()))
+        return
+    }
+    defer outFile.Close()
 
-	// 检查链码响应
-	payload := string(createResponse.Payload)
-	if payload != "" {
-		appG.Response(http.StatusInternalServerError, "失败", payload)
-		return
-	}
+    // 将文件内容写入本地
+    if _, err := io.Copy(outFile, file); err != nil {
+        appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("写入文件出错: %s", err.Error()))
+        return
+    }
 
-	// 返回结果
-	appG.Response(http.StatusOK, "成功", datasetFile)
+    // 将文件信息存储到链上
+    args := [][]byte{
+        []byte(datasetFile.FileName),
+        []byte(fmt.Sprintf("%d", datasetFile.Size)),
+        []byte(datasetFile.Hash),
+    }
+
+    createResponse, err := bc.ChannelExecute("createFile", args)
+    if err != nil {
+        appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("调用智能合约出错: %s", err.Error()))
+        return
+    }
+
+    // 检查链码响应
+    payload := string(createResponse.Payload)
+    if payload != "" {
+        appG.Response(http.StatusInternalServerError, "失败", payload)
+        return
+    }
+
+    // 返回结果
+    appG.Response(http.StatusOK, "成功", datasetFile)
+}
+
+func DownloadDataSet(c *gin.Context) {
+    appG := app.Gin{C: c}
+    body := new(struct {
+        Files  []string `json:"files"`
+        Name   string   `json:"name"`
+        Owner  string   `json:"owner"`
+    })
+
+    // 解析 Body 参数
+    if err := c.ShouldBindJSON(body); err != nil {
+        appG.Response(http.StatusBadRequest, "失败", fmt.Sprintf("参数出错: %s", err.Error()))
+        return
+    }
+
+    // 使用 ToJson 函数将文件哈希值数组序列化为 JSON 字符串
+    bodyBytes := ToJson(body.Files)
+
+    // 调用智能合约查询文件信息
+    resp, err := bc.ChannelQuery("queryMultipleFiles", [][]byte{bodyBytes})
+    if err != nil {
+        fmt.Printf("调用智能合约出错: %s", err.Error())
+        appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("调用智能合约出错: %s", err.Error()))
+        return
+    }
+
+    // 反序列化 JSON
+    var files []DatasetFile
+    if err = json.Unmarshal(resp.Payload, &files); err != nil {
+        appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("反序列化出错: %s", err.Error()))
+        return
+    }
+
+    // 创建一个临时文件用于存储压缩包
+    tmpFile, err := os.CreateTemp("", "dataset-*.zip")
+    if err != nil {
+        appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("创建临时文件失败: %s", err.Error()))
+        return
+    }
+    defer os.Remove(tmpFile.Name())
+
+    // 创建一个 zip.Writer 对象
+    zipWriter := zip.NewWriter(tmpFile)
+    defer zipWriter.Close()
+
+    // 压缩文件
+    for _, file := range files {
+        fileName := file.FileName
+        if fileName == "" {
+            appG.Response(http.StatusBadRequest, "失败", "文件名不能为空")
+            return
+        }
+
+        // 构建文件路径
+        filePath := fmt.Sprintf("data/Files/%s", fileName)
+
+        // 打开文件
+        f, err := os.Open(filePath)
+        if err != nil {
+            appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("无法读取文件: %s", err.Error()))
+            return
+        }
+        defer f.Close()
+
+        // 创建一个 zip 文件
+        zipFile, err := zipWriter.Create(fileName)
+        if err != nil {
+            appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("创建 zip 文件失败: %s", err.Error()))
+            return
+        }
+
+        // 将文件内容写入 zip 文件
+        _, err = io.Copy(zipFile, f)
+        if err != nil {
+            appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("写入 zip 文件失败: %s", err.Error()))
+            return
+        }
+    }
+
+    // 关闭 zip.Writer，确保所有内容都写入了压缩包
+    if err := zipWriter.Close(); err != nil {
+        appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("关闭 zip.Writer 失败: %s", err.Error()))
+        return
+    }
+
+    // 读取压缩包的内容
+    tmpFile.Seek(0, io.SeekStart)
+    zipContent, err := io.ReadAll(tmpFile)
+    if err != nil {
+        appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("读取压缩包内容失败: %s", err.Error()))
+        return
+    }
+
+    // Base64 编码压缩包内容
+    encodedZipContent := base64.StdEncoding.EncodeToString(zipContent)
+
+    // 返回 JSON 响应
+    appG.Response(http.StatusOK, "成功", map[string]interface{}{
+        "files": []map[string]string{
+            {
+                "filename": fmt.Sprintf("%s.zip", body.Name),
+                "content":  encodedZipContent,
+            },
+        },
+        "name":  body.Name,
+        "owner": body.Owner,
+    })
 }

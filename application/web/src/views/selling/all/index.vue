@@ -1,9 +1,5 @@
 <template>
   <div class="container">
-    <!-- <el-alert type="success">
-      <p>账户ID: {{ userId }}</p>
-    </el-alert> -->
-
     <!-- 数据集创建部分 -->
     <div class="dataset-container">
       <el-input
@@ -11,7 +7,7 @@
         placeholder="请输入要创建的数据集名称"
         class="dataset-input"
       />
-      
+
       <el-input
         v-model.number="rows"
         type="number"
@@ -32,7 +28,7 @@
           :value="task"
         />
       </el-select>
-      
+
       <el-select
         v-model="metadata.modalities"
         placeholder="请选择数据模态"
@@ -46,7 +42,7 @@
           :value="modality"
         />
       </el-select>
-      
+
       <el-select
         v-model="metadata.formats"
         placeholder="请选择文件格式"
@@ -62,7 +58,7 @@
       </el-select>
 
       <el-select
-        v-model="metadata.subTasks"
+        v-model="metadata.sub_tasks"
         placeholder="请选择子任务"
         class="dataset-select"
         multiple
@@ -130,10 +126,20 @@
         />
       </el-select>
 
+      <el-upload
+        class="upload-demo"
+        :before-upload="beforeUpload"
+        :show-file-list="true"
+        @success="handleUploadSuccess"
+      >
+        <el-button type="primary">上传文件</el-button>
+      </el-upload>
+
       <el-button
         type="primary"
         @click="createDataset"
         class="dataset-button"
+        :loading="loading"
       >
         创建数据集
       </el-button>
@@ -145,11 +151,11 @@
 </template>
 
 <script>
-import { mapGetters } from 'vuex'
-import { uploadSet } from '@/api/upload'
+import { mapGetters } from 'vuex';
+import { uploadSet, uploadFile } from '@/api/upload';  // Assuming you have a method to create dataset
 
 export default {
-  name: 'AllSelling',
+  name: 'DataSets',
   data() {
     return {
       loading: false,
@@ -160,20 +166,21 @@ export default {
         tasks: [],
         modalities: [],
         formats: [],
-        subTasks: [],
+        sub_tasks: [],
         languages: [],
         libraries: [],
         tags: [],
         license: ''
       },
-availableTasks: ['图像识别', '文本摘要', '语音合成'],  // 示例数据
-availableModalities: ['视觉', '文本', '声音'],  // 示例数据
-availableFormats: ['PNG', 'CSV', 'WAV'],  // 示例数据
-availableSubTasks: ['面部识别', '情感分析', '语音到文本'],  // 示例数据
-availableLanguages: ['英语', '中文', '法语'],  // 示例数据
-availableLibraries: ['TensorFlow', 'PyTorch', 'Keras'],  // 示例数据
-availableTags: ['机器学习', '深度学习', '自然语言处理'],  // 示例数据
-availableLicenses: ['MIT License', 'Apache License', 'GNU General Public License (GPL)']  // 示例数据
+      fileHash: [],            // 存储文件的哈希值
+      availableTasks: ['图像识别', '文本摘要', '语音合成'],  // 示例数据
+      availableModalities: ['视觉', '文本', '声音'],  // 示例数据
+      availableFormats: ['PNG', 'CSV', 'WAV'],  // 示例数据
+      availableSubTasks: ['面部识别', '情感分析', '语音到文本'],  // 示例数据
+      availableLanguages: ['英语', '中文', '法语'],  // 示例数据
+      availableLibraries: ['TensorFlow', 'PyTorch', 'Keras'],  // 示例数据
+      availableTags: ['机器学习', '深度学习', '自然语言处理'],  // 示例数据
+      availableLicenses: ['MIT License', 'Apache License', 'GNU General Public License (GPL)']  // 示例数据
     }
   },
   computed: {
@@ -184,13 +191,95 @@ availableLicenses: ['MIT License', 'Apache License', 'GNU General Public License
     ])
   },
   methods: {
+    beforeUpload(file) {
+      // 定义支持的文件类型，包括图片、文本、音频、代码文件、压缩包和CSV文件
+      const allowedTypes = [
+        'image', // 图片
+        'text',  // 文本文件
+        'audio', // 音频文件
+        'application/x-zip-compressed', // ZIP 压缩包
+        'application/zip',              // ZIP 压缩包
+        'application/x-rar-compressed', // RAR 压缩包
+        'text/csv',                     // CSV 文件
+        'application/csv'               // CSV 文件
+      ];
+
+      // 定义支持的文件扩展名
+      const codeExtensions = ['.py', '.js', '.java', '.c', '.cpp', '.csv'];
+
+      // 检查文件的 MIME 类型和扩展名
+      const isFile = allowedTypes.some(type => file.type.includes(type)) ||
+                    codeExtensions.some(ext => file.name.endsWith(ext));
+      if (!isFile) {
+        this.$message.error('只允许上传图片、文本、音频文件、代码文件、压缩包或CSV文件。');
+        return false;
+      }            
+      this.$message.success('文件类型检查通过!');
+
+      const form = new FormData();
+      form.append('file', file);
+      uploadFile(form).then(response => {
+        this.fileHash.push(response.hash);
+        this.$message.success(`文件上传成功! 文件哈希: ${response.hash}`); 
+      }).catch(error => {
+        this.$message.error('文件上传失败!');
+      });
+      return true;
+    },
+    handleUploadSuccess(response) {
+      // this.fileHash = response.hash;
+      //this.$message.success(`文件上传成功! 文件哈希: ${response.hash}`);
+    },
+
+  //   customRequest({ file, onSuccess, onError }) {
+  //     this.$message.success('开始上传文件!');
+  //     const formData = new FormData();
+  //     formData.append('file', file);
+  //     console.log('Uploading file:', file); // 调试用
+
+  //     // 直接使用 axios 发送请求
+  //     axios.post('http://localhost:8888/api/v1/uploadFile', formData, {
+  //       headers: {
+  //         'Content-Type': 'multipart/form-data'
+  //       }
+  //     })
+  //     .then(response => {
+  //       console.log('Upload response:', response); // 调试用
+  //       this.$message.success('文件上传成功！');
+  //       onSuccess(response.data); // 调用 onSuccess 通知 el-upload 上传成功
+  //     })
+  //     .catch(error => {
+  //       console.error('Upload error:', error); // 调试用
+  //       this.$message.error('文件上传失败！');
+  //       onError(error); // 调用 onError 通知 el-upload 上传失败
+  //     });
+  //   }
+  // ,
+  customRequest (file){
+  //  const form = new FormData();
+  //  form.append('file', file);
+  //   uploadFile(form).then(response => {
+  //     this.$message.success('文件上传成功!');
+  //     this.fileHash = response.hash;
+  //   }).catch(error => {
+  //     this.$message.error('文件上传失败!');
+  //   });
+},
     createDataset() {
       if (!this.newDatasetName) {
         this.$message({
           type: 'warning',
           message: '数据集名称不能为空!'
-        })
-        return
+        });
+        return;
+      }
+
+      if (!this.fileHash) {
+        this.$message({
+          type: 'warning',
+          message: '请先上传文件!'
+        });
+        return;
       }
 
       const currentTime = new Date().toISOString(); // 获取当前时间的 ISO 字符串
@@ -206,7 +295,8 @@ availableLicenses: ['MIT License', 'Apache License', 'GNU General Public License
         Owner: this.userId,
         CreationTime: currentTime,
         Rows: this.rows,  // 新添加的行数字段
-        metadata: metadata
+        metadata: metadata,
+        Files: this.fileHash  // 添加文件哈希
       }).then(response => {
         this.loading = false;
         if (response) {
@@ -228,6 +318,7 @@ availableLicenses: ['MIT License', 'Apache License', 'GNU General Public License
           message: `创建数据集时发生错误: ${error.message}`
         });
       });
+      this.fileHash = [];
     }
   }
 }

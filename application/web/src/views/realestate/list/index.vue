@@ -1,23 +1,20 @@
 <template>
   <div class="container">
-    <el-alert type="success">
-      <p>账户ID: {{ userId }}</p>
-    </el-alert>
     <div class="dataset-grid">
-  <el-card
-    v-for="dataset in datasets"
-    :key="dataset.name"
-    class="dataset-card"
-  >
-    <h4 class="dataset-name">{{ dataset.name }}</h4>
-    <p class="dataset-owner">所有者: {{ dataset.owner }}</p>
-    <div class="dataset-actions">
-      <el-button type="primary" icon="el-icon-download" @click="DownloadDatasets(dataset.name, userId)">下载</el-button>
-      <el-button type="success" icon="el-icon-edit" @click="viewLogs(dataset)">查看修改日志</el-button>
-      <el-button type="info" icon="el-icon-info" @click="viewMetadata(dataset)">查看详细信息</el-button>
+      <el-card
+        v-for="dataset in datasets"
+        :key="dataset.name"
+        class="dataset-card"
+      >
+        <h4 class="dataset-name">{{ dataset.name }}</h4>
+        <p class="dataset-owner">所有者: {{ dataset.owner }}</p>
+        <div class="dataset-actions">
+          <!-- Removed download button -->
+          <el-button type="success" icon="el-icon-edit" @click="viewLogs(dataset)">查看修改日志</el-button>
+          <el-button type="info" icon="el-icon-info" @click="viewMetadata(dataset)">查看详细信息</el-button>
+        </div>
+      </el-card>
     </div>
-  </el-card>
-</div>
 
     <!-- 修改日志对话框 -->
     <el-dialog title="修改日志" :visible.sync="dialogVisible" width="60%" @close="closeDialog">
@@ -25,8 +22,8 @@
         <el-table-column prop="creation_time" label="时间戳"></el-table-column>
         <el-table-column prop="change_log" label="变更日志"></el-table-column>
         <el-table-column prop="files" label="文件">
-          <template slot-scope="scope">
-            <div v-for="file in scope.row.files" :key="file">{{ file || '无文件' }}</div>
+          <template v-slot="scope">
+            <el-button type="primary" icon="el-icon-download" @click="downloadFiles(scope.row.files)">下载文件</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -35,8 +32,8 @@
       </span>
     </el-dialog>
 
-    <!-- 详细信息对话框 -->
-    <el-dialog title="详细信息" :visible.sync="metadataDialogVisible" width="60%" @close="closeMetadataDialog">
+ <!-- 详细信息对话框 -->
+ <el-dialog title="详细信息" :visible.sync="metadataDialogVisible" width="60%" @close="closeMetadataDialog">
       <el-form :model="metadata" label-width="120px">
         <el-form-item label="任务">
           <div v-for="task in metadata.tasks" :key="task">{{ task || '无任务' }}</div>
@@ -67,13 +64,29 @@
         <el-button @click="closeMetadataDialog">返回</el-button>
       </span>
     </el-dialog>
+
+
+    <!-- 文件详情对话框 -->
+    <el-dialog title="文件详情" :visible.sync="fileDialogVisible" width="60%" @close="closeFileDialog">
+      <div v-if="selectedFiles.length">
+        <el-list>
+          <el-list-item v-for="file in selectedFiles" :key="file">
+            <span>{{ file || '无文件' }}</span>
+          </el-list-item>
+        </el-list>
+      </div>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="closeFileDialog">关闭</el-button>
+      </span>
+    </el-dialog>
   </div>
 </template>
 
 <script>
 import { mapGetters } from 'vuex';
 import { GetAllDataSet } from '@/api/datasets';
-import { getDatasetMetadata, DownloadDatasets } from '@/api/upload';
+import { getDatasetMetadata, downloadDataset } from '@/api/upload';
+
 export default {
   name: 'DataSetsTable',
   data() {
@@ -82,7 +95,8 @@ export default {
       logs: [],
       metadata: {},
       dialogVisible: false,
-      metadataDialogVisible: false,
+      fileDialogVisible: false,
+      selectedFiles: [],
       selectedDataset: null,
     };
   },
@@ -111,7 +125,7 @@ export default {
     },
     async viewMetadata(dataset) {
       try {
-        const response2 = await getDatasetMetadata( { owner: dataset.owner, name: dataset.name });
+        const response2 = await getDatasetMetadata({ owner: dataset.owner, name: dataset.name });
         console.log(response2);
         this.metadata = response2; // 获取元数据
         this.metadataDialogVisible = true;
@@ -120,37 +134,72 @@ export default {
         this.$message.error('获取元数据失败');
       }
     },
-    async DownloadDatasets(dataSetName) {
-    const userId = this.userId; // 从 Vuex 获取用户 ID
-    const timestamp = new Date().getTime(); // 获取当前时间戳
-    try {
-      // 调用后端 API 来处理下载请求
-      const response = await DownloadDataset({
-        name: dataSetName,
-        userId: userId,
-        timestamp: timestamp
-      });
-      // 处理响应，例如重定向到下载链接或显示下载信息
-      console.log('Download response:', response);
-      if (response && response.data && response.data.downloadUrl) {
-        // 假设后端返回一个包含下载链接的响应
-        window.location.href = response.data.downloadUrl;
-      } else {
-        this.$message.error('下载请求失败');
-      }
-    } catch (error) {
-      console.error('Error initiating download:', error);
-      this.$message.error('下载请求失败');
-    }
-  },
+    openFileDialog(files) {
+      this.selectedFiles = files;
+      this.fileDialogVisible = true;
+    },
     closeDialog() {
       this.dialogVisible = false;
       this.logs = []; // 清空日志数据
+    },
+    closeFileDialog() {
+      this.fileDialogVisible = false;
+      this.selectedFiles = []; // 清空选中的文件
     },
     closeMetadataDialog() {
       this.metadataDialogVisible = false;
       this.metadata = {}; // 清空元数据
     },
+    async downloadFiles(files) {
+      try {
+        this.$message('加载');
+        const response3 = await downloadDataset({
+          files: files,
+          name: this.selectedDataset.name,
+          owner: this.selectedDataset.owner,
+        });
+
+        this.$message('加载完成');
+
+        // 从响应中提取文件内容和文件名
+        const { files: fileData } = response3.data;
+        if (fileData && fileData.length > 0) {
+          const file = fileData[0];
+          const { filename, content } = file;
+
+          // Base64 解码
+          const byteCharacters = atob(content);
+          const byteNumbers = new Array(byteCharacters.length);
+          for (let i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i);
+          }
+          const byteArray = new Uint8Array(byteNumbers);
+
+          // 创建 Blob 对象
+          const blob = new Blob([byteArray], { type: 'application/zip' });
+
+          // 创建 URL 对象来表示文件的下载地址
+          const url = window.URL.createObjectURL(blob);
+
+          // 创建一个 a 元素，并设置 href 为文件 URL
+          const link = document.createElement('a');
+          link.href = url;
+          link.setAttribute('download', filename); // 使用从响应中获取的文件名
+
+          // 触发下载
+          document.body.appendChild(link);
+          link.click();
+
+          // 清理 URL 对象
+          window.URL.revokeObjectURL(url);
+        } else {
+          this.$message.error('未找到要下载的文件');
+        }
+      } catch (error) {
+        console.error('下载文件失败:', error);
+        this.$message.error(`下载文件失败: ${error.message || error}`);
+      }
+    }
   },
 };
 </script>
