@@ -11,7 +11,7 @@ import (
 )
 
 type AccountIdBody struct {
-	ID  string `json:"id"`  // 用户ID
+	ID   string `json:"id"`   // 用户ID
 	Name string `json:"name"` // 用户名
 }
 
@@ -97,5 +97,3 @@ func CheckAccount(c *gin.Context) {
 
 	appG.Response(http.StatusOK, "成功", data)
 }
-
-

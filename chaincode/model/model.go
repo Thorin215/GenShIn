@@ -13,21 +13,6 @@ type DatasetFile struct {
 	Size     int64  `json:"size"`     // 文件大小
 }
 
-/*
-元数据不上链，方便数据库查询
-// DatasetMetadata 数据集元数据
-type DatasetMetadata struct {
-	Tasks      []string `json:"tasks"`      // 目标任务
-	Modalities []string `json:"modalities"` // 数据模态
-	Formats    []string `json:"formats"`    // 文件格式
-	SubTasks   []string `json:"sub_tasks"`  // 子任务
-	Languages  []string `json:"languages"`  // 语言
-	Libraries  []string `json:"libraries"`  // 适用库
-	Tags       []string `json:"tags"`       // 标签
-	License    string   `json:"license"`    // 许可证
-}
-*/
-
 // DatasetVersion 数据集一个版本
 type DatasetVersion struct {
 	CreationTime string   `json:"creation_time"` // 创建时间

@@ -1,8 +1,8 @@
 ## 如改动代码需要自行编译后再使用 Docker 部署
 
-后端：进入 `server` 执行 `./build.sh` ，并在 `docker-compose.yml` 配置本地镜像：`fabric-realty.server:latest`
+后端：进入 `server` 执行 `./build.sh` ，并在 `docker-compose.yml` 配置本地镜像：`fabric-genshin.server:latest`
 
-前端：进入 `web` 执行 `./build.sh` ，并在 `docker-compose.yml` 配置本地镜像：`fabric-realty.web:latest`
+前端：进入 `web` 执行 `./build.sh` ，并在 `docker-compose.yml` 配置本地镜像：`fabric-genshin.web:latest`
 
 ## 支持本地开发模式
 
