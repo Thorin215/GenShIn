@@ -1,5 +1,13 @@
 <template>
   <div class="container">
+    <!-- <div class="search-bar">
+      <el-input
+        v-model="searchQuery"
+        placeholder="搜索数据集名称"
+        prefix-icon="el-icon-search"
+        @input="filteredDatasets"
+      ></el-input>
+    </div> -->
     <div class="dataset-grid">
       <el-card
         v-for="dataset in datasets"
@@ -65,21 +73,6 @@
         <el-button @click="closeMetadataDialog">返回</el-button>
       </span>
     </el-dialog>
-
-
-    <!-- 文件详情对话框 -->
-    <el-dialog title="文件详情" :visible.sync="fileDialogVisible" width="60%" @close="closeFileDialog">
-      <div v-if="selectedFiles.length">
-        <el-list>
-          <el-list-item v-for="file in selectedFiles" :key="file">
-            <span>{{ file || '无文件' }}</span>
-          </el-list-item>
-        </el-list>
-      </div>
-      <span slot="footer" class="dialog-footer">
-        <el-button @click="closeFileDialog">关闭</el-button>
-      </span>
-    </el-dialog>
   </div>
 </template>
 
@@ -99,10 +92,17 @@ export default {
       fileDialogVisible: false,
       selectedFiles: [],
       selectedDataset: null,
+      searchQuery: '',
     };
   },
   computed: {
     ...mapGetters(['userId', 'userName', 'roles']),
+    filteredDatasets() {
+      if (!this.searchQuery) return this.datasets;
+      return this.datasets.filter(dataset =>
+        dataset.name.toLowerCase().includes(this.searchQuery.toLowerCase())
+      );
+    },
   },
   mounted() {
     this.fetchDataSets();
@@ -205,7 +205,6 @@ export default {
   },
 };
 </script>
-
 <style scoped>
 .container {
   width: 100%;
@@ -213,6 +212,11 @@ export default {
   min-height: 100%;
   overflow: hidden;
 }
+
+/* .search-bar {
+  margin-bottom: 20px;
+} */
+
 
 .dataset-grid {
   display: flex;

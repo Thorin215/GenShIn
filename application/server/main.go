@@ -13,7 +13,7 @@ import (
 	"application/sql"
 
 	// "github.com/jinzhu/gorm"
-	"application/model"
+	// "application/model"
 
 	"gorm.io/gorm"
 )
@@ -38,9 +38,8 @@ func main() {
 
 	sql.InitMysql(setting.Conf.MysqlConfig)
 
-	sql.DB.AutoMigrate(&TestData{})
-	sql.DB.AutoMigrate(&model.DataSet{})
-	sql.DB.AutoMigrate(&model.MetaData{})
+	// sql.DB.AutoMigrate(&TestData{})
+	// sql.DB.AutoMigrate(&model.MetaData{})
 
 	blockchain.Init()
 	go cron.Init()

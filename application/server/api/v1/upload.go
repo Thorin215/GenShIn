@@ -2,6 +2,7 @@ package v1
 
 import (
 	bc "application/blockchain"
+	"application/model"
 	"application/pkg/app"
 	"archive/zip"
 	"crypto/sha256"
@@ -10,7 +11,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
+	// "io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -20,16 +21,16 @@ import (
 )
 
 // DatasetMetadata 数据集元数据
-type DatasetMetadata struct {
-	Tasks      []string `json:"tasks"`      // 目标任务
-	Modalities []string `json:"modalities"` // 数据模态
-	Formats    []string `json:"formats"`    // 文件格式
-	SubTasks   []string `json:"sub_tasks"`  // 子任务
-	Languages  []string `json:"languages"`  // 语言
-	Libraries  []string `json:"libraries"`  // 适用库
-	Tags       []string `json:"tags"`       // 标签
-	License    string   `json:"license"`    // 许可证
-}
+// type DatasetMetadata struct {
+// 	Tasks      []string `json:"tasks"`      // 目标任务
+// 	Modalities []string `json:"modalities"` // 数据模态
+// 	Formats    []string `json:"formats"`    // 文件格式
+// 	SubTasks   []string `json:"sub_tasks"`  // 子任务
+// 	Languages  []string `json:"languages"`  // 语言
+// 	Libraries  []string `json:"libraries"`  // 适用库
+// 	Tags       []string `json:"tags"`       // 标签
+// 	License    string   `json:"license"`    // 许可证
+// }
 
 // SetRequestBody 用于接收账户ID和数据集的请求体
 type SetRequestBody struct {
@@ -37,7 +38,7 @@ type SetRequestBody struct {
 	Owner        string          `json:"Owner"`
 	CreationTime time.Time       `json:"CreationTime"`
 	Rows         int32           `json:"Rows"`
-	Metadata     DatasetMetadata `json:"metadata"` // 元数据
+	Metadata     model.DatasetMetadata `json:"metadata"` // 元数据
 	Files        []string        `json:"files"`    // 文件哈希列表
 }
 
@@ -45,7 +46,7 @@ type SetRequestBody struct {
 type Dataset struct {
 	Owner    string           `json:"owner"`    // 所有者ID
 	Name     string           `json:"name"`     // 数据集名
-	Metadata DatasetMetadata  `json:"metadata"` // 元数据
+	Metadata model.DatasetMetadata  `json:"metadata"` // 元数据
 	Versions []DatasetVersion `json:"versions"` // 版本列表
 }
 
@@ -54,7 +55,7 @@ type DatasetD struct {
 	Owner     string           `json:"owner"`     // 所有者ID
 	Name      string           `json:"name"`      // 数据集名
 	Downloads int32            `json:"downloads"` // 下载次数
-	Metadata  DatasetMetadata  `json:"metadata"`  // 元数据
+	Metadata  model.DatasetMetadata  `json:"metadata"`  // 元数据
 	Versions  []DatasetVersion `json:"versions"`  // 版本列表
 }
 
@@ -66,87 +67,102 @@ type DatasetVersion struct {
 	Files        []string `json:"files"`         // 文件哈希列表
 }
 
+
 func UploadSet(c *gin.Context) {
-	appG := app.Gin{C: c}
-	body := new(SetRequestBody)
+    appG := app.Gin{C: c}
+    body := new(SetRequestBody)
 
-	// 解析请求体
-	if err := c.ShouldBindJSON(body); err != nil {
-		appG.Response(http.StatusBadRequest, "失败", fmt.Sprintf("参数错误: %s", err.Error()))
-		return
-	}
-	fmt.Println(body.Name)
-	fmt.Println(body.Files)
-	// 构造 DatasetVersion 列表
-	versions := []DatasetVersion{
-		{
-			CreationTime: body.CreationTime.Format(time.RFC3339),
-			ChangeLog:    "Initial Version",
-			Rows:         body.Rows,
-			Files:        body.Files,
-		},
-	}
+    // 解析请求体
+    if err := c.ShouldBindJSON(body); err != nil {
+        appG.Response(http.StatusBadRequest, "失败", fmt.Sprintf("参数错误: %s", err.Error()))
+        return
+    }
+    fmt.Println(body.Name)
+    fmt.Println(body.Files)
 
-	// 调用链码创建数据集
-	args := [][]byte{
-		[]byte(body.Owner),
-		[]byte(body.Name),
-		[]byte(ToJson(versions)), // 将 JSON 字符串转换为 []byte
-	}
+    // 构造 DatasetVersion 列表
+    versions := []DatasetVersion{
+        {
+            CreationTime: body.CreationTime.Format(time.RFC3339),
+            ChangeLog:    "Initial Version",
+            Rows:         body.Rows,
+            Files:        body.Files,
+        },
+    }
 
-	createResponse, err := bc.ChannelExecute("createDataset", args)
-	if err != nil {
-		appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("调用智能合约出错: %s", err.Error()))
-		return
-	}
+    // 调用链码创建数据集
+    args := [][]byte{
+        []byte(body.Owner),
+        []byte(body.Name),
+        []byte(ToJson(versions)), // 将 JSON 字符串转换为 []byte
+    }
 
-	// 检查链码响应
-	payload := string(createResponse.Payload)
-	if payload != "" {
-		appG.Response(http.StatusInternalServerError, "失败", payload)
-		return
-	}
+    createResponse, err := bc.ChannelExecute("createDataset", args)
+    if err != nil {
+        appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("调用智能合约出错: %s", err.Error()))
+        return
+    }
 
-	// 将数据集信息写入本地 JSON 文件
-	setRecord := map[string]interface{}{
-		"name":     body.Name,
-		"owner":    body.Owner,
-		"metadata": body.Metadata,
-	}
+    // 检查链码响应
+    payload := string(createResponse.Payload)
+    if payload != "" {
+        appG.Response(http.StatusInternalServerError, "失败", payload)
+        return
+    }
 
-	file, err := os.OpenFile("data/setRecord.json", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0644)
-	if err != nil {
-		appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("无法打开文件: %s", err.Error()))
-		return
-	}
-	defer file.Close()
+    // 将数据集信息写入数据库
+    metadataBody := &model.MetadataBody{
+		Name :     body.Name,
+		Owner:     body.Owner,
+		Metadata:  body.Metadata,
+    }
 
-	// 将现有内容读入
-	var records []map[string]interface{}
-	fileContent, _ := os.ReadFile("data/setRecord.json")
-	if len(fileContent) > 0 {
-		json.Unmarshal(fileContent, &records)
-	}
+    if err := model.CreateMetaData(metadataBody); err != nil {
+        appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("写入数据库失败: %s", err.Error()))
+        return
+    }
 
-	// 添加新记录
-	records = append(records, setRecord)
+    // 将数据集信息写入本地 JSON 文件
+    setRecord := map[string]interface{}{
+        "name":     body.Name,
+        "owner":    body.Owner,
+        "metadata": body.Metadata,
+    }
 
-	// 写入文件
-	file.Truncate(0) // 清空文件内容
-	file.Seek(0, 0)  // 将文件指针移动到开头
-	encoder := json.NewEncoder(file)
-	encoder.SetIndent("", "  ")
-	if err := encoder.Encode(records); err != nil {
-		appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("写入文件失败: %s", err.Error()))
-		return
-	}
+    file, err := os.OpenFile("data/setRecord.json", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0644)
+    if err != nil {
+        appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("无法打开文件: %s", err.Error()))
+        return
+    }
+    defer file.Close()
 
-	// 成功响应
-	appG.Response(http.StatusOK, "成功", gin.H{
-		"dataset_name": body.Name,
-		"owner":        body.Owner,
-	})
+    // 将现有内容读入
+    var records []map[string]interface{}
+    fileContent, _ := os.ReadFile("data/setRecord.json")
+    if len(fileContent) > 0 {
+        json.Unmarshal(fileContent, &records)
+    }
+
+    // 添加新记录
+    records = append(records, setRecord)
+
+    // 写入文件
+    file.Truncate(0) // 清空文件内容
+    file.Seek(0, 0)  // 将文件指针移动到开头
+    encoder := json.NewEncoder(file)
+    encoder.SetIndent("", "  ")
+    if err := encoder.Encode(records); err != nil {
+        appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("写入文件失败: %s", err.Error()))
+        return
+    }
+
+    // 成功响应
+    appG.Response(http.StatusOK, "成功", gin.H{
+        "dataset_name": body.Name,
+        "owner":        body.Owner,
+    })
 }
+
 
 func ToJson(v interface{}) []byte {
 	bytes, err := json.Marshal(v)
@@ -229,7 +245,7 @@ func UpdateVersion(c *gin.Context) {
 	})
 }
 
-// GetDatasetMetadata 查询本地 setRecord.json 获取元数据
+// GetDatasetMetadata 从数据库中查询元数据
 func GetDatasetMetadata(c *gin.Context) {
 	appG := app.Gin{C: c}
 	var requestBody struct {
@@ -251,53 +267,21 @@ func GetDatasetMetadata(c *gin.Context) {
 		return
 	}
 
-	// 读取本地 setRecord.json 文件
-	filePath := "data/setRecord.json" // 更新为 setRecord.json 文件的实际路径
-	fileContent, err := ioutil.ReadFile(filePath)
+	// 从数据库中查询元数据
+	metadataBody, err := model.GetMetaData(name, owner)
 	if err != nil {
-		appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("读取文件失败: %s", err.Error()))
+		appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("查询数据库失败: %s", err.Error()))
 		return
 	}
 
-	// 定义用于解析的临时结构体
-	var datasets []map[string]interface{}
-
-	// 解析 JSON 文件内容
-	err = json.Unmarshal(fileContent, &datasets)
-	if err != nil {
-		appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("解析文件内容失败: %s", err.Error()))
+	if metadataBody == nil {
+		appG.Response(http.StatusNotFound, "失败", "数据集未找到")
 		return
 	}
 
-	// 查找匹配的 Dataset
-	for _, dataset := range datasets {
-		if dataset["owner"] == owner && dataset["name"] == name {
-			metadata, ok := dataset["metadata"].(map[string]interface{})
-			if !ok {
-				appG.Response(http.StatusInternalServerError, "失败", "元数据格式不正确")
-				return
-			}
-
-			// 转换为 DatasetMetadata 结构体
-			var result DatasetMetadata
-			metadataBytes, err := json.Marshal(metadata)
-			if err != nil {
-				appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("转换元数据失败: %s", err.Error()))
-				return
-			}
-
-			err = json.Unmarshal(metadataBytes, &result)
-			if err != nil {
-				appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("解析元数据失败: %s", err.Error()))
-				return
-			}
-
-			appG.Response(http.StatusOK, "成功", result)
-			return
-		}
-	}
-
-	appG.Response(http.StatusNotFound, "失败", "数据集未找到")
+	// 将元数据转换为 model.DatasetMetadata 结构体
+	metadata := metadataBody.Metadata
+	appG.Response(http.StatusOK, "成功", metadata)
 }
 
 type DatasetFile struct {
@@ -505,3 +489,158 @@ func DownloadDataSet(c *gin.Context) {
 		"owner": body.Owner,
 	})
 }
+
+
+/*File version*/
+// func UploadSet(c *gin.Context) {
+// 	appG := app.Gin{C: c}
+// 	body := new(SetRequestBody)
+
+// 	// 解析请求体
+// 	if err := c.ShouldBindJSON(body); err != nil {
+// 		appG.Response(http.StatusBadRequest, "失败", fmt.Sprintf("参数错误: %s", err.Error()))
+// 		return
+// 	}
+// 	fmt.Println(body.Name)
+// 	fmt.Println(body.Files)
+// 	// 构造 DatasetVersion 列表
+// 	versions := []DatasetVersion{
+// 		{
+// 			CreationTime: body.CreationTime.Format(time.RFC3339),
+// 			ChangeLog:    "Initial Version",
+// 			Rows:         body.Rows,
+// 			Files:        body.Files,
+// 		},
+// 	}
+
+// 	// 调用链码创建数据集
+// 	args := [][]byte{
+// 		[]byte(body.Owner),
+// 		[]byte(body.Name),
+// 		[]byte(ToJson(versions)), // 将 JSON 字符串转换为 []byte
+// 	}
+
+// 	createResponse, err := bc.ChannelExecute("createDataset", args)
+// 	if err != nil {
+// 		appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("调用智能合约出错: %s", err.Error()))
+// 		return
+// 	}
+
+// 	// 检查链码响应
+// 	payload := string(createResponse.Payload)
+// 	if payload != "" {
+// 		appG.Response(http.StatusInternalServerError, "失败", payload)
+// 		return
+// 	}
+
+// 	// 将数据集信息写入本地 JSON 文件
+// 	setRecord := map[string]interface{}{
+// 		"name":     body.Name,
+// 		"owner":    body.Owner,
+// 		"metadata": body.Metadata,
+// 	}
+
+// 	file, err := os.OpenFile("data/setRecord.json", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0644)
+// 	if err != nil {
+// 		appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("无法打开文件: %s", err.Error()))
+// 		return
+// 	}
+// 	defer file.Close()
+
+// 	// 将现有内容读入
+// 	var records []map[string]interface{}
+// 	fileContent, _ := os.ReadFile("data/setRecord.json")
+// 	if len(fileContent) > 0 {
+// 		json.Unmarshal(fileContent, &records)
+// 	}
+
+// 	// 添加新记录
+// 	records = append(records, setRecord)
+
+// 	// 写入文件
+// 	file.Truncate(0) // 清空文件内容
+// 	file.Seek(0, 0)  // 将文件指针移动到开头
+// 	encoder := json.NewEncoder(file)
+// 	encoder.SetIndent("", "  ")
+// 	if err := encoder.Encode(records); err != nil {
+// 		appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("写入文件失败: %s", err.Error()))
+// 		return
+// 	}
+
+// 	// 成功响应
+// 	appG.Response(http.StatusOK, "成功", gin.H{
+// 		"dataset_name": body.Name,
+// 		"owner":        body.Owner,
+// 	})
+// }
+
+// // GetDatasetMetadata 查询本地 setRecord.json 获取元数据
+// func GetDatasetMetadata(c *gin.Context) {
+// 	appG := app.Gin{C: c}
+// 	var requestBody struct {
+// 		Owner string `json:"owner"`
+// 		Name  string `json:"name"`
+// 	}
+
+// 	// 解析请求体
+// 	if err := c.BindJSON(&requestBody); err != nil {
+// 		appG.Response(http.StatusBadRequest, "失败", fmt.Sprintf("解析请求体失败: %s", err.Error()))
+// 		return
+// 	}
+
+// 	owner := requestBody.Owner
+// 	name := requestBody.Name
+
+// 	if owner == "" || name == "" {
+// 		appG.Response(http.StatusBadRequest, "失败", "所有者和数据集名称不能为空")
+// 		return
+// 	}
+
+// 	// 读取本地 setRecord.json 文件
+// 	filePath := "data/setRecord.json" // 更新为 setRecord.json 文件的实际路径
+// 	fileContent, err := ioutil.ReadFile(filePath)
+// 	if err != nil {
+// 		appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("读取文件失败: %s", err.Error()))
+// 		return
+// 	}
+
+// 	// 定义用于解析的临时结构体
+// 	var datasets []map[string]interface{}
+
+// 	// 解析 JSON 文件内容
+// 	err = json.Unmarshal(fileContent, &datasets)
+// 	if err != nil {
+// 		appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("解析文件内容失败: %s", err.Error()))
+// 		return
+// 	}
+
+// 	// 查找匹配的 Dataset
+// 	for _, dataset := range datasets {
+// 		if dataset["owner"] == owner && dataset["name"] == name {
+// 			metadata, ok := dataset["metadata"].(map[string]interface{})
+// 			if !ok {
+// 				appG.Response(http.StatusInternalServerError, "失败", "元数据格式不正确")
+// 				return
+// 			}
+
+// 			// 转换为 model.DatasetMetadata 结构体
+// 			var result model.DatasetMetadata
+// 			metadataBytes, err := json.Marshal(metadata)
+// 			if err != nil {
+// 				appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("转换元数据失败: %s", err.Error()))
+// 				return
+// 			}
+
+// 			err = json.Unmarshal(metadataBytes, &result)
+// 			if err != nil {
+// 				appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("解析元数据失败: %s", err.Error()))
+// 				return
+// 			}
+
+// 			appG.Response(http.StatusOK, "成功", result)
+// 			return
+// 		}
+// 	}
+
+// 	appG.Response(http.StatusNotFound, "失败", "数据集未找到")
+// }
