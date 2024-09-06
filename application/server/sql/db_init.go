@@ -1,4 +1,5 @@
 package sql
+
 import (
 	"application/setting"
 	// "fmt"
@@ -16,11 +17,11 @@ func InitMysql(cfg *setting.MysqlConfig) {
 	// 	cfg.Port,
 	// 	cfg.Database,
 	// )
+	// dsn := "root@unix(/var/run/mysqld/mysqld.sock)/genshin?charset=utf8mb4&parseTime=True&loc=Local"
 	dsn := "root@tcp(127.0.0.1:3307)/genshin?charset=utf8mb4&parseTime=True&loc=Local"
 	var err error
 
 	DB, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
-
 
 	if err != nil {
 		panic(err)
