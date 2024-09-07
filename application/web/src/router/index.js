@@ -64,10 +64,10 @@ export const constantRoutes = [{
  */
 export const asyncRoutes = [
   {
-    path: '/selling',
+    path: '/upload',
     component: Layout,
-    redirect: '/selling/all',
-    name: 'Selling',
+    redirect: '/upload/all',
+    name: 'Upload',
     alwaysShow: true,
     meta: {
       title: '新建',
@@ -75,8 +75,8 @@ export const asyncRoutes = [
     },
     children: [{
       path: 'all',
-      name: 'SellingAll',
-      component: () => import('@/views/selling/all/index'),
+      name: 'UploadAll',
+      component: () => import('@/views/upload/all/index'),
       meta: {
         title: '新建数据集',
         icon: 'new2'
@@ -85,10 +85,10 @@ export const asyncRoutes = [
     ]
   },
   {
-    path: '/donating',
+    path: '/update',
     component: Layout,
-    redirect: '/donating/all',
-    name: 'Donating',
+    redirect: '/update/all',
+    name: 'Update',
     alwaysShow: true,
     meta: {
       title: '更新',
@@ -96,8 +96,8 @@ export const asyncRoutes = [
     },
     children: [{
       path: 'all',
-      name: 'DonatingAll',
-      component: () => import('@/views/donating/all/index'),
+      name: 'UpdateAll',
+      component: () => import('@/views/update/all/index'),
       meta: {
         title: '更新数据集',
         icon: 'pen'
