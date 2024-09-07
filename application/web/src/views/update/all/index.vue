@@ -14,10 +14,13 @@
       <el-form-item label="文件上传">
         <el-upload
           class="upload-demo"
-          :before-upload="beforeUpload"
-          :on-success="handleUploadSuccess"
-          :on-error="handleUploadError"
-          :show-file-list="false"
+          :show-file-list="true"
+          :file-list="fileList"
+          :auto-upload="false"
+          :on-change="handleFileChange"
+          :on-remove="handleFileRemove"
+          action=""
+          multiple
           >
           <el-button size="large" type="primary">上传文件</el-button>
         </el-upload>
@@ -45,6 +48,7 @@ export default {
       files: '',
       owner: '', // 初始为空
       fileHash: [],            // 存储文件的哈希值
+      fileList: [],            // 上传的文件列表
     }
   },
   computed: {
@@ -58,7 +62,9 @@ export default {
     this.owner = this.userId // 在 created 钩子中设置 Owner
   },
   methods: {
-    beforeUpload(file) {
+    handleFileChange(file, fileList) {
+      this.fileList = fileList;
+
       // 定义支持的文件类型，包括图片、文本、音频、代码文件、压缩包和CSV文件
       const allowedTypes = [
         'image', // 图片
@@ -75,31 +81,35 @@ export default {
       const codeExtensions = ['.py', '.js', '.java', '.c', '.cpp', '.csv'];
 
       // 检查文件的 MIME 类型和扩展名
-      const isFile = allowedTypes.some(type => file.type.includes(type)) ||
+      const isFile = allowedTypes.some(type => file.raw.type.includes(type)) ||
                     codeExtensions.some(ext => file.name.endsWith(ext));
       if (!isFile) {
         this.$message.error('只允许上传图片、文本、音频文件、代码文件、压缩包或CSV文件。');
+        file.status = 'error';
         return false;
       }            
       this.$message.success('文件类型检查通过!');
+
+
       const form = new FormData();
-      form.append('file', file);
+      form.append('file', file.raw);
       uploadFile(form).then(response => {
-        
         this.fileHash.push(response.hash);
-        this.$message.success(`文件上传成功! 文件哈希: ${response.hash}`);
+        this.$message.success(`文件上传成功! 文件哈希: ${response.hash}`); 
+        file.status = 'success';
       }).catch(error => {
         this.$message.error('文件上传失败!');
+        file.status = 'error';
       });
-      return true;
+
+      return file.status === 'success';
     },
-    handleUploadSuccess(response) {
-      // this.files += (this.files ? ', ' : '') + response.hash;
-      this.$message.success(`文件上传成功! 文件哈希: ${response.hash}`);
+
+    handleFileRemove(file, fileList) {
+      console.log(file, fileList);
+      this.fileList = fileList.concat(file); // disable file removal
     },
-    handleUploadError() {
-      this.$message.error('文件上传失败!' + error);
-    },
+
     submitForm() {
       if (!this.name) {
         this.$message({
