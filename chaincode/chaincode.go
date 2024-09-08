@@ -38,40 +38,51 @@ func (t *BlockChainGenshin) Invoke(stub shim.ChaincodeStubInterface) pb.Response
 	switch funcName {
 	case "hello":
 		return api.Hello(stub, args)
+
+		// user api
+	case "queryAllUsers":
+		return api.QueryAllUsers(stub, args)
+	case "queryUser":
+		return api.QueryUser(stub, args)
 	case "createUser":
 		return api.CreateUser(stub, args)
 	case "modifyUserName":
 		return api.ModifyUserName(stub, args)
-	case "queryUserList":
-		return api.QueryUserList(stub, args)
-	case "queryUser":
-		return api.QueryUser(stub, args)
-	case "createDataset":
-		return api.CreateDataset(stub, args)
-	case "queryDataset":
-		return api.QueryDataset(stub, args)
-	case "queryDatasetList":
-		return api.QueryDatasetList(stub, args)
-	case "appendDatasetVersion":
-		return api.AppendDatasetVersion(stub, args)
-	case "increaseDatasetStars":
-		return api.IncreaseDatasetStars(stub, args)
-	case "increaseDatasetDownloads":
-		return api.IncreaseDatasetDownloads(stub, args)
+
+		// file api
 	case "createFile":
 		return api.CreateFile(stub, args)
 	case "queryFile":
 		return api.QueryFile(stub, args)
-	case "queryMultipleFiles":
-		return api.QueryMultipleFiles(stub, args)
-	case "createDownloadRecord":
-		return api.CreateDownloadRecord(stub, args)
-	case "queryDownloadRecordListByUser":
-		return api.QueryDownloadRecordListByUser(stub, args)
-	case "queryDownloadRecordListByDataset":
-		return api.QueryDownloadRecordListByDataset(stub, args)
-	case "queryDatasetFullList":
-		return api.QueryDatasetFullList(stub, args)
+	case "queryFiles":
+		return api.QueryFiles(stub, args)
+
+		// dataset api
+	case "createDataset":
+		return api.CreateDataset(stub, args)
+	case "addDatasetVersion":
+		return api.AddDatasetVersion(stub, args)
+	case "queryAllDatasets":
+		return api.QueryAllDatasets(stub, args)
+	case "queryDatasetsByUser":
+		return api.QueryDatasetsByUser(stub, args)
+	case "queryDataset":
+		return api.QueryDataset(stub, args)
+	case "incrementDatasetStars":
+		return api.IncrementDatasetStars(stub, args)
+	case "incrementDatasetDownloads":
+		return api.IncrementDatasetDownloads(stub, args)
+	case "deleteDataset":
+		return api.DeleteDataset(stub, args)
+
+		// record api
+	case "createRecord":
+		return api.CreateRecord(stub, args)
+	case "queryRecordsByUser":
+		return api.QueryRecordsByUser(stub, args)
+	case "queryRecordsByDataset":
+		return api.QueryRecordsByDataset(stub, args)
+
 	default:
 		return shim.Error(fmt.Sprintf("没有该功能: %s", funcName))
 	}

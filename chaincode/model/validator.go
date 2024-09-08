@@ -1,123 +1,152 @@
 package model
 
 import (
+	"chaincode/pkg/utils"
 	"errors"
-	"regexp"
 )
 
 func ValidateUser(user User) error {
 	// User ID: 3-16 characters, only letters, numbers, and underscores
 	// User Name: 3-16 characters, only letters, numbers, and underscores
 
-	if len(user.ID) < 3 || len(user.ID) > 16 {
+	if !utils.ValidateLength(user.ID, 3, 16) {
 		return errors.New("User ID must be between 3 and 16 characters")
 	}
-	if len(user.Name) < 3 || len(user.Name) > 16 {
+	if !utils.ValidateLength(user.Name, 3, 16) {
 		return errors.New("User Name must be between 3 and 16 characters")
 	}
-	if !regexp.MustCompile(`^[a-zA-Z0-9_]+$`).MatchString(user.ID) {
+
+	if !utils.ValidateName(user.ID) {
 		return errors.New("User ID must contain only letters, numbers, and underscores")
 	}
-	if !regexp.MustCompile(`^[a-zA-Z0-9_]+$`).MatchString(user.Name) {
+	if !utils.ValidateName(user.Name) {
 		return errors.New("User Name must contain only letters, numbers, and underscores")
 	}
+
 	return nil
 }
-func ValidateFile(file DatasetFile) error {
-	// File Name: 3-64 characters
-	// File Size: positive integer
+
+func ValidateFile(file File) error {
+	// File Size:  0-2GB as Bytes
 	// File Hash: SHA-256
 
-	if len(file.FileName) < 3 || len(file.FileName) > 64 {
-		return errors.New("File Name must be between 3 and 64 characters")
+	if !utils.ValidateRange64(file.Size, 0, int64(2)*1024*1024*1024) {
+		return errors.New("File Size must be between 0 and 2GB")
 	}
-	if file.Size <= 0 {
-		return errors.New("File Size must be a positive integer")
-	}
-	if !regexp.MustCompile(`^[a-f0-9]{64}$`).MatchString(file.Hash) {
+	if !utils.ValidateSHA256(file.Hash) {
 		return errors.New("File Hash must be a SHA-256 hash")
 	}
+
 	return nil
 }
-func ValidateVersion(version DatasetVersion) error {
+
+func ValidateDatasetFile(datasetFile DatasetFile) error {
+	// File Name: 1-64 characters [not contain invalid characters]
+	// File Hash: SHA-256
+
+	if !utils.ValidateLength(datasetFile.FileName, 1, 64) {
+		return errors.New("File Name must be between 1 and 64 characters")
+	}
+	if !utils.ValidateFileName(datasetFile.FileName) {
+		return errors.New("File Name must not contain invalid characters")
+	}
+	if !utils.ValidateSHA256(datasetFile.Hash) {
+		return errors.New("File Hash must be a SHA-256 hash")
+	}
+
+	return nil
+}
+
+func ValidateVersion(version Version) error {
+	// Files: list of DatasetFile
+	// Rows: non-negative integer
 	// Creation Time: ISO 8601
 	// Change Log: 0-1024 characters
-	// Rows: non-negative integer
-	// Files: list of SHA-256 hashes
 
-	if !regexp.MustCompile(`^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$`).MatchString(version.CreationTime) {
-		return errors.New("Creation Time must be an ISO 8601 timestamp")
-	}
-	if len(version.ChangeLog) < 0 || len(version.ChangeLog) > 1024 {
-		return errors.New("Change Log must be between 0 and 1024 characters")
+	for _, file := range version.Files {
+		if err := ValidateDatasetFile(file); err != nil {
+			return err
+		}
 	}
 	if version.Rows < 0 {
 		return errors.New("Rows must be a non-negative integer")
 	}
-	// for _, file := range version.Files {
-	// 	if !regexp.MustCompile(`^[a-f0-9]{64}$`).MatchString(file) {
-	// 		return errors.New("Files must be a list of SHA-256 hashes")
-	// 	}
-	// }
+	if !utils.ValidateTime(version.CreationTime) {
+		return errors.New("Creation Time must be an ISO 8601 timestamp")
+	}
+	if !utils.ValidateLength(version.ChangeLog, 0, 1024) {
+		return errors.New("Changelog must be between 0 and 1024 characters")
+	}
+
 	return nil
 }
+
 func ValidateDataset(dataset Dataset) error {
 	// Owner ID: existing user [3-16 characters, only letters, numbers, and underscores]
-	// Dataset Name: 1-64 characters [only letters, numbers, and underscores]
+	// Dataset Name: 3-64 characters [only letters, numbers, and underscores]
 
-	if len(dataset.Owner) < 3 || len(dataset.Owner) > 16 {
+	if !utils.ValidateLength(dataset.Owner, 3, 16) {
 		return errors.New("Owner ID must be between 3 and 16 characters")
 	}
-	if len(dataset.Name) < 1 || len(dataset.Name) > 64 {
-		return errors.New("Dataset Name must be between 1 and 64 characters")
+	if !utils.ValidateLength(dataset.Name, 3, 64) {
+		return errors.New("Dataset Name must be between 3 and 64 characters")
 	}
-	if !regexp.MustCompile(`^[a-zA-Z0-9_]+$`).MatchString(dataset.Owner) {
+	if !utils.ValidateName(dataset.Owner) {
 		return errors.New("Owner ID must contain only letters, numbers, and underscores")
 	}
-	if !regexp.MustCompile(`^[a-zA-Z0-9_]+$`).MatchString(dataset.Name) {
+	if !utils.ValidateName(dataset.Name) {
 		return errors.New("Dataset Name must contain only letters, numbers, and underscores")
 	}
 
-	// Validate Version
+	if dataset.Downloads < 0 {
+		return errors.New("Downloads must be a non-negative integer")
+	}
+	if dataset.Stars < 0 {
+		return errors.New("Stars must be a non-negative integer")
+	}
+
 	for _, version := range dataset.Versions {
 		if err := ValidateVersion(version); err != nil {
 			return err
 		}
 	}
+
 	return nil
 }
-func ValidateDownloadRecord(record DownloadRecord) error {
+
+func ValidateRecord(record Record) error {
 	// Owner ID: existing user [3-16 characters, only letters, numbers, and underscores]
-	// Dataset Name: existing dataset [1-64 characters, only letters, numbers, and underscores]
+	// Dataset Name: existing dataset [3-64 characters, only letters, numbers, and underscores]
 	// User ID: existing user [3-16 characters, only letters, numbers, and underscores]
-	// Files: list of SHA-256 hashes
+	// Files: list of DatasetFile
 	// Time: ISO 8601
 
-	if len(record.DatasetOwner) < 3 || len(record.DatasetOwner) > 16 {
+	if !utils.ValidateLength(record.DatasetOwner, 3, 16) {
 		return errors.New("Dataset Owner must be between 3 and 16 characters")
 	}
-	if len(record.DatasetName) < 1 || len(record.DatasetName) > 64 {
-		return errors.New("Dataset Name must be between 1 and 64 characters")
+	if !utils.ValidateLength(record.DatasetName, 3, 64) {
+		return errors.New("Dataset Name must be between 3 and 64 characters")
 	}
-	if len(record.User) < 3 || len(record.User) > 16 {
+	if !utils.ValidateLength(record.User, 3, 16) {
 		return errors.New("User ID must be between 3 and 16 characters")
 	}
-	if !regexp.MustCompile(`^[a-zA-Z0-9_]+$`).MatchString(record.DatasetOwner) {
+	if !utils.ValidateName(record.DatasetOwner) {
 		return errors.New("Dataset Owner must contain only letters, numbers, and underscores")
 	}
-	if !regexp.MustCompile(`^[a-zA-Z0-9_]+$`).MatchString(record.DatasetName) {
+	if !utils.ValidateName(record.DatasetName) {
 		return errors.New("Dataset Name must contain only letters, numbers, and underscores")
 	}
-	if !regexp.MustCompile(`^[a-zA-Z0-9_]+$`).MatchString(record.User) {
+	if !utils.ValidateName(record.User) {
 		return errors.New("User ID must contain only letters, numbers, and underscores")
 	}
-	if !regexp.MustCompile(`^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$`).MatchString(record.Time) {
+	if !utils.ValidateTime(record.Time) {
 		return errors.New("Time must be an ISO 8601 timestamp")
 	}
 	for _, file := range record.Files {
-		if !regexp.MustCompile(`^[a-f0-9]{64}$`).MatchString(file) {
-			return errors.New("Files must be a list of SHA-256 hashes")
+		if err := ValidateDatasetFile(file); err != nil {
+			return err
 		}
 	}
+
 	return nil
 }

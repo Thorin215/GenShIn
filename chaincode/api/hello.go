@@ -7,7 +7,7 @@ import (
 	pb "github.com/hyperledger/fabric/protos/peer"
 )
 
-// Hello 测试
+// Hello 测试用 API
 func Hello(stub shim.ChaincodeStubInterface, args []string) pb.Response {
 	err := utils.WriteLedger(map[string]interface{}{"msg": "hello"}, stub, "hello", []string{})
 	if err != nil {
