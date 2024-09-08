@@ -5,9 +5,7 @@ go 1.18
 require (
 	github.com/gin-gonic/gin v1.9.0
 	github.com/hyperledger/fabric-sdk-go v1.0.0
-	github.com/jinzhu/gorm v1.9.16
 	github.com/robfig/cron/v3 v3.0.0
-	github.com/stretchr/testify v1.8.2
 	gopkg.in/ini.v1 v1.67.0
 	gorm.io/driver/mysql v1.5.7
 	gorm.io/gorm v1.25.11
@@ -62,6 +60,7 @@ require (
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.1.1 // indirect
+	github.com/stretchr/testify v1.8.2 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.2.11 // indirect
 	github.com/weppos/publicsuffix-go v0.5.0 // indirect
