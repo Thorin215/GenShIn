@@ -22,7 +22,7 @@ func CreateDataset(c *gin.Context) {
 		Metadata model.Metadata `json:"metadata"`
 	}
 
-	if err := c.ShouldBindJSON(body); err != nil {
+	if err := c.ShouldBindJSON(&body); err != nil {
 		appG.Response(http.StatusBadRequest, "失败", fmt.Sprintf("参数错误: %s", err.Error()))
 		return
 	}
@@ -32,15 +32,9 @@ func CreateDataset(c *gin.Context) {
 		[]byte(body.Name),
 	}
 
-	res, err := bc.ChannelExecute("createDataset", args)
+	_, err := bc.ChannelExecute("createDataset", args)
 	if err != nil {
 		appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("调用智能合约出错: %s", err.Error()))
-		return
-	}
-
-	payload := string(res.Payload)
-	if res.ChaincodeStatus != 200 {
-		appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("智能合约出错: %s", payload))
 		return
 	}
 
@@ -58,16 +52,12 @@ func CreateDataset(c *gin.Context) {
 	appG.Response(http.StatusOK, "成功", "")
 }
 
-func GetAllDatasets(c *gin.Context) {
+func QueryAllDatasets(c *gin.Context) {
 	appG := app.Gin{C: c}
 
 	res, err := bc.ChannelQuery("queryAllDatasets", nil)
 	if err != nil {
 		appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("调用智能合约出错: %s", err.Error()))
-		return
-	}
-	if res.ChaincodeStatus != 200 {
-		appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("智能合约出错: %s", string(res.Payload)))
 		return
 	}
 
@@ -81,14 +71,14 @@ func GetAllDatasets(c *gin.Context) {
 	appG.Response(http.StatusOK, "成功", datasets)
 }
 
-func GetDatasetMetadata(c *gin.Context) {
+func QueryDatasetMetadata(c *gin.Context) {
 	appG := app.Gin{C: c}
 	var body struct {
 		Owner string `json:"owner"`
 		Name  string `json:"name"`
 	}
 
-	if err := c.BindJSON(&body); err != nil {
+	if err := c.ShouldBindJSON(&body); err != nil {
 		appG.Response(http.StatusBadRequest, "失败", fmt.Sprintf("解析请求体失败: %s", err.Error()))
 		return
 	}
@@ -124,23 +114,25 @@ func AddDatasetVersion(c *gin.Context) {
 		Version model.Version `json:"version"`
 	}
 
-	if err := c.ShouldBindJSON(body); err != nil {
+	if err := c.ShouldBindJSON(&body); err != nil {
 		appG.Response(http.StatusBadRequest, "失败", fmt.Sprintf("参数错误: %s", err.Error()))
 		return
 	}
 
+	// 确认文件不为空
+	if len(body.Version.Files) == 0 {
+		appG.Response(http.StatusBadRequest, "失败", "文件不能为空")
+		return
+	}
+
 	// 调用链码
-	res, err := bc.ChannelExecute("appendDatasetVersion", [][]byte{
+	_, err := bc.ChannelExecute("addDatasetVersion", [][]byte{
 		[]byte(body.Owner),
 		[]byte(body.Name),
 		[]byte(utils.ToJson(body.Version)),
 	})
 	if err != nil {
 		appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("调用智能合约出错: %s", err.Error()))
-		return
-	}
-	if res.ChaincodeStatus != 200 {
-		appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("智能合约出错: %s", string(res.Payload)))
 		return
 	}
 

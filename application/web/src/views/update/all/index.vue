@@ -1,7 +1,7 @@
 <template>
   <div class="container">
     <!-- 数据集创建表单 -->
-    <el-form :model="datasetForm" ref="form" class="dataset-form">
+    <el-form ref="form" class="dataset-form">
       <el-form-item label="数据集名称">
         <el-input v-model="name" placeholder="请输入数据集名称" />
       </el-form-item>
@@ -34,7 +34,8 @@
 
 <script>
 import { mapGetters } from 'vuex'
-import { updateVersion, uploadFile } from '@/api/upload'
+import { addDatasetVersion } from '@/api/dataset'
+import { uploadFile } from '@/api/file'
 
 export default {
   name: 'AllDonating',
@@ -47,7 +48,7 @@ export default {
       rows: 0,
       files: '',
       owner: '', // 初始为空
-      fileHash: [],            // 存储文件的哈希值
+      fileListx: [],            // 存储文件的哈希值与文件名
       fileList: [],            // 上传的文件列表
     }
   },
@@ -94,8 +95,8 @@ export default {
       const form = new FormData();
       form.append('file', file.raw);
       uploadFile(form).then(response => {
-        this.fileHash.push(response.hash);
-        this.$message.success(`文件上传成功! 文件哈希: ${response.hash}`); 
+        this.fileListx.push({ hash: response, filename: file.name });
+        this.$message.success(`文件上传成功! 文件哈希: ${response}`); 
         file.status = 'success';
       }).catch(error => {
         this.$message.error('文件上传失败!');
@@ -125,35 +126,28 @@ export default {
       const isoDateString = new Date().toISOString().substring(0, 19) + 'Z';
 
       const dataToSubmit = { 
-        name: this.name,
         owner: this.owner,
-        creation_time: isoDateString,  // 格式化后的时间字符串
-        change_log: this.change_log,
-        rows: this.rows,
-        files: this.fileHash,
+        name: this.name,
+        version: {
+          creation_time: isoDateString,  // 格式化后的时间字符串
+          change_log: this.change_log,
+          rows: this.rows,
+          files: this.fileListx,
+        },
       };
 
-      // Use imported updateVersion API function
-      updateVersion(dataToSubmit)
+      addDatasetVersion(dataToSubmit)
         .then(response => {
-          if (response.dataset_name === this.name) {
-            this.$message({
-              type: 'success',
-              message: '版本更新成功!'
-            });
-          } else {
-            this.$message({
-              type: 'error',
-              message: '版本更新失败!'
-            });
-          }
+          this.$message({
+            type: 'success',
+            message: '版本新增成功!'
+          });
         })
         .catch(error => {
           this.$message({
             type: 'error',
-            message: '网络错误!'
+            message: '版本新增失败!'
           });
-          console.error('提交数据错误:', error);
         });
     }
   }

@@ -15,8 +15,8 @@ type File struct {
 
 // DatasetFile 数据集文件
 type DatasetFile struct {
-	Hash     string `json:"hash"`      // 文件哈希
-	FileName string `json:"file_name"` // 文件名
+	Hash     string `json:"hash"`     // 文件哈希
+	FileName string `json:"filename"` // 文件名
 }
 
 // Version 数据集的一个版本

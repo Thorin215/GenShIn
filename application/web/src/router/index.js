@@ -45,11 +45,11 @@ export const constantRoutes = [{
 {
   path: '/',
   component: Layout,
-  redirect: '/realestate',
+  redirect: '/dataset',
   children: [{
-    path: 'realestate',
-    name: 'Realestate',
-    component: () => import('@/views/realestate/list/index'),
+    path: 'dataset',
+    name: 'Dataset',
+    component: () => import('@/views/dataset/list/index'),
     meta: {
       title: '数据信息',
       icon: 'xj'

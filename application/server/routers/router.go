@@ -2,8 +2,9 @@ package routers
 
 import (
 	v1 "application/api/v1"
-	"net/http"
+	"time"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -11,21 +12,14 @@ import (
 func InitRouter() *gin.Engine {
 	r := gin.Default()
 
-	// CORS 处理
-	r.Use(func(c *gin.Context) {
-		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
-		c.Writer.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-		c.Writer.Header().Set("Access-Control-Allow-Headers", "Origin, Content-Type, Authorization")
-		c.Writer.Header().Set("Access-Control-Expose-Headers", "Content-Type")
-
-		// Preflight request
-		if c.Request.Method == http.MethodOptions {
-			c.AbortWithStatus(http.StatusNoContent)
-			return
-		}
-
-		c.Next()
-	})
+	r.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"*"},
+		AllowMethods:     []string{"GET", "POST", "OPTIONS", "PUT", "DELETE"},
+		AllowHeaders:     []string{"Origin", "Content-Type"},
+		ExposeHeaders:    []string{"Content-Length", "Content-Type"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
 
 	apiV1 := r.Group("/api/v1")
 	{
@@ -38,8 +32,9 @@ func InitRouter() *gin.Engine {
 
 		// dataset
 		apiV1.POST("/createDataset", v1.CreateDataset)
-		apiV1.POST("/getAllDatasets", v1.GetAllDatasets)
-		apiV1.POST("/getDatasetMetadata", v1.GetDatasetMetadata)
+		apiV1.POST("/queryAllDatasets", v1.QueryAllDatasets)
+		apiV1.POST("/queryDatasetMetadata", v1.QueryDatasetMetadata)
+		apiV1.POST("/addDatasetVersion", v1.AddDatasetVersion)
 
 		// file
 		apiV1.POST("/uploadFile", v1.UploadFile)

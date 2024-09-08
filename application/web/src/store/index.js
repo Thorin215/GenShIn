@@ -4,7 +4,7 @@ import getters from './getters'
 import app from './modules/app'
 import permission from './modules/permission'
 import settings from './modules/settings'
-import account from './modules/account'
+import user from './modules/user'
 
 Vue.use(Vuex)
 
@@ -13,7 +13,7 @@ const store = new Vuex.Store({
     app,
     permission,
     settings,
-    account
+    user
   },
   getters
 })

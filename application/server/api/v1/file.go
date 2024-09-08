@@ -36,13 +36,9 @@ func UploadFile(c *gin.Context) {
 	hashString := hex.EncodeToString(hashSum)
 
 	// 检查链上文件是否已存在。如果存在，不再重复上传，直接返回
-	res, err := bc.ChannelQuery("queryFile", [][]byte{[]byte(hashString)})
-	if err != nil {
-		appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("调用智能合约出错: %s", err.Error()))
-		return
-	}
-	if res.ChaincodeStatus == 200 {
-		appG.Response(http.StatusOK, "成功", "文件已存在")
+	_, err = bc.ChannelQuery("queryFile", [][]byte{[]byte(hashString)})
+	if err == nil {
+		appG.Response(http.StatusOK, "成功", hashString)
 		return
 	}
 
@@ -77,16 +73,9 @@ func UploadFile(c *gin.Context) {
 		[]byte(fmt.Sprintf("%d", header.Size)),
 	}
 
-	res, err = bc.ChannelExecute("createFile", args)
+	_, err = bc.ChannelExecute("createFile", args)
 	if err != nil {
 		appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("调用智能合约出错: %s", err.Error()))
-		return
-	}
-
-	// 检查链码响应
-	payload := string(res.Payload)
-	if res.ChaincodeStatus != 200 {
-		appG.Response(http.StatusInternalServerError, "失败", payload)
 		return
 	}
 
@@ -102,7 +91,7 @@ func DownloadFile(c *gin.Context) {
 		FileName string `json:"filename"`
 	}
 
-	if err := c.ShouldBindJSON(body); err != nil {
+	if err := c.ShouldBindJSON(&body); err != nil {
 		appG.Response(http.StatusBadRequest, "失败", fmt.Sprintf("参数错误: %s", err.Error()))
 		return
 	}
@@ -139,20 +128,21 @@ func DownloadFilesCompressed(c *gin.Context) {
 	}
 
 	// 解析 Body 参数
-	if err := c.ShouldBindJSON(body); err != nil {
+	if err := c.ShouldBindJSON(&body); err != nil {
 		appG.Response(http.StatusBadRequest, "失败", fmt.Sprintf("参数出错: %s", err.Error()))
 		return
 	}
 
+	re := regexp.MustCompile("^[a-f0-9]{64}$")
 	for _, file := range body.Files {
 		// 检查 hash 是否为 SHA-256
-		if ok, _ := regexp.MatchString("^[a-f0-9]{64}$", file.Hash); !ok {
+		if ok := re.MatchString(file.Hash); !ok {
 			appG.Response(http.StatusBadRequest, "失败", fmt.Sprintf("文件哈希格式错误: %s", file.Hash))
 			return
 		}
 
 		// 检查本地文件是否存在
-		filePath := filepath.Join("data/Files", file.Hash)
+		filePath := filepath.Join("data", "Files", file.Hash)
 		if _, err := os.Stat(filePath); err != nil {
 			appG.Response(http.StatusNotFound, "失败", fmt.Sprintf("文件不存在: %s", file.Hash))
 			return
@@ -160,7 +150,8 @@ func DownloadFilesCompressed(c *gin.Context) {
 	}
 
 	// 1. 创建一个临时压缩文件
-	zipFile, err := os.CreateTemp("data/", "download-*.zip")
+	zipFile, err := os.CreateTemp("data", "download-*.zip")
+	filePath := zipFile.Name()
 	if err != nil {
 		appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("创建压缩文件出错: %s", err.Error()))
 		return
@@ -168,14 +159,12 @@ func DownloadFilesCompressed(c *gin.Context) {
 
 	// 2. 将所有文件添加到压缩文件
 	zipWriter := zip.NewWriter(zipFile)
-	defer zipWriter.Close()
 	for _, file := range body.Files {
-		fileReader, err := os.Open(filepath.Join("data/Files", file.Hash))
+		fileReader, err := os.Open(filepath.Join("data", "Files", file.Hash))
 		if err != nil {
 			appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("打开文件出错: %s", err.Error()))
 			return
 		}
-		defer fileReader.Close()
 
 		zipFileWriter, err := zipWriter.Create(file.FileName)
 		if err != nil {
@@ -187,9 +176,16 @@ func DownloadFilesCompressed(c *gin.Context) {
 			appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("写入压缩文件出错: %s", err.Error()))
 			return
 		}
+		fileReader.Close()
 	}
+	zipWriter.Close()
 
 	// 3. 返回压缩文件
-	appG.C.FileAttachment(zipFile.Name(), fmt.Sprintf("%s.zip", body.ZipName))
-	defer os.Remove(zipFile.Name())
+	var filePathAbs string
+	if filePathAbs, err = filepath.Abs(filePath); err != nil {
+		appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("获取文件路径出错: %s", err.Error()))
+		return
+	}
+	appG.C.FileAttachment(filePathAbs, fmt.Sprintf("%s.zip", body.ZipName))
+	defer os.Remove(filePath)
 }
