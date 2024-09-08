@@ -1,8 +1,10 @@
 package routers
 
 import (
-	"net/http"
 	v1 "application/api/v1"
+	"time"
+
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -10,34 +12,35 @@ import (
 func InitRouter() *gin.Engine {
 	r := gin.Default()
 
+	r.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"*"},
+		AllowMethods:     []string{"GET", "POST", "OPTIONS", "PUT", "DELETE"},
+		AllowHeaders:     []string{"Origin", "Content-Type"},
+		ExposeHeaders:    []string{"Content-Length", "Content-Type"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
 
-	 // CORS 处理
-	 r.Use(func(c *gin.Context) {
-        c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
-        c.Writer.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-        c.Writer.Header().Set("Access-Control-Allow-Headers", "Origin, Content-Type, Authorization")
-        c.Writer.Header().Set("Access-Control-Expose-Headers", "Content-Type")
-
-        // Preflight request
-        if c.Request.Method == http.MethodOptions {
-            c.AbortWithStatus(http.StatusNoContent)
-            return
-        }
-
-        c.Next()
-    })
-	
 	apiV1 := r.Group("/api/v1")
 	{
+		// hello
 		apiV1.GET("/hello", v1.Hello)
-		apiV1.POST("/queryAccountList", v1.QueryAccountList)
-		apiV1.POST("/checkAccount", v1.CheckAccount)
-		apiV1.POST("/uploadSet", v1.UploadSet)
-		apiV1.POST("/getalldataset",v1.GetAllDataSet)
-		apiV1.POST("/updateVersion", v1.UpdateVersion)
-		apiV1.POST("/getDatasetMetadata", v1.GetDatasetMetadata)
+
+		// user
+		apiV1.POST("/queryUser", v1.QueryUser)
+		apiV1.POST("/queryAllUsers", v1.QueryAllUsers)
+
+		// dataset
+		apiV1.POST("/createDataset", v1.CreateDataset)
+		apiV1.POST("/queryAllDatasets", v1.QueryAllDatasets)
+		apiV1.POST("/queryDatasetMetadata", v1.QueryDatasetMetadata)
+		apiV1.POST("/addDatasetVersion", v1.AddDatasetVersion)
+
+		// file
 		apiV1.POST("/uploadFile", v1.UploadFile)
-		apiV1.POST("/downloadDataset", v1.DownloadDataSet)
+		apiV1.POST("/downloadFile", v1.DownloadFile)
+		apiV1.POST("/downloadFilesCompressed", v1.DownloadFilesCompressed)
+
 	}
 	return r
 }

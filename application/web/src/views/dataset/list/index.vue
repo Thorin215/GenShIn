@@ -32,7 +32,7 @@
         <el-table-column prop="change_log" label="变更日志"></el-table-column>
         <el-table-column prop="files" label="文件">
           <template v-slot="scope">
-            <el-button type="primary" icon="el-icon-download" @click="downloadFiles(scope.row.files)">下载文件</el-button>
+            <el-button type="primary" icon="el-icon-download" @click="downloadFiles(selectedDataset.name, scope.row.files)">下载文件</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -78,8 +78,8 @@
 
 <script>
 import { mapGetters } from 'vuex';
-import { GetAllDataSet } from '@/api/datasets';
-import { getDatasetMetadata, downloadDataset } from '@/api/upload';
+import { queryAllDatasets, queryDatasetMetadata } from '@/api/dataset';
+import { downloadFilesCompressed } from '@/api/file';
 
 export default {
   name: 'DataSetsTable',
@@ -90,6 +90,7 @@ export default {
       metadata: {},
       dialogVisible: false,
       fileDialogVisible: false,
+      metadataDialogVisible: false,
       selectedFiles: [],
       selectedDataset: null,
       searchQuery: '',
@@ -110,7 +111,7 @@ export default {
   methods: {
     async fetchDataSets() {
       try {
-        const response = await GetAllDataSet();
+        const response = await queryAllDatasets();
         this.datasets = response;
         console.log(this.datasets);
         this.$message.success('数据加载成功！');
@@ -126,8 +127,7 @@ export default {
     },
     async viewMetadata(dataset) {
       try {
-        const response2 = await getDatasetMetadata({ owner: dataset.owner, name: dataset.name });
-        console.log(response2);
+        const response2 = await queryDatasetMetadata({ owner: dataset.owner, name: dataset.name });
         this.metadata = response2; // 获取元数据
         this.metadataDialogVisible = true;
       } catch (error) {
@@ -151,52 +151,12 @@ export default {
       this.metadataDialogVisible = false;
       this.metadata = {}; // 清空元数据
     },
-    async downloadFiles(files) {
+    async downloadFiles(zipname, files) {
       try {
-        this.$message('加载');
-        //log.console('files', files);
-        const response3 = await downloadDataset({
+        await downloadFilesCompressed({
           files: files,
-          name: this.selectedDataset.name,
-          owner: this.selectedDataset.owner,
+          zipname: zipname
         });
-        console.log(response3);
-        this.$message.success('加载完成');
-
-        // 从响应中提取文件内容和文件名
-        const { files: fileData } = response3;
-        if (fileData && fileData.length > 0) {
-          const file = fileData[0];
-          const { filename, content } = file;
-
-          // Base64 解码
-          const byteCharacters = atob(content);
-          const byteNumbers = new Array(byteCharacters.length);
-          for (let i = 0; i < byteCharacters.length; i++) {
-            byteNumbers[i] = byteCharacters.charCodeAt(i);
-          }
-          const byteArray = new Uint8Array(byteNumbers);
-
-          // 创建 Blob 对象
-          const blob = new Blob([byteArray], { type: 'application/zip' });
-
-          // 创建 URL 对象来表示文件的下载地址
-          const url = window.URL.createObjectURL(blob);
-
-          // 创建一个 a 元素，并设置 href 为文件 URL
-          const link = document.createElement('a');
-          link.href = url;
-          link.setAttribute('download', filename); // 使用从响应中获取的文件名
-
-          // 触发下载
-          document.body.appendChild(link);
-          link.click();
-
-          // 清理 URL 对象
-          window.URL.revokeObjectURL(url);
-        } else {
-          this.$message.error('未找到要下载的文件');
-        }
       } catch (error) {
         console.error('下载文件失败:', error);
         this.$message.error(`下载文件失败: ${error.message || error}`);

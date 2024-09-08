@@ -9,7 +9,7 @@
       </div>
       <el-select v-model="value" placeholder="请选择用户角色" class="login-select" @change="selectGet">
         <el-option
-          v-for="item in accountList"
+          v-for="item in userList"
           :key="item.id"
           :label="item.name"
           :value="item.id"
@@ -30,7 +30,7 @@
 </template>
 
 <script>
-import { queryAccountList } from '@/api/account'
+import { queryAllUsers } from '@/api/user'
 
 export default {
   name: 'Login',
@@ -38,7 +38,7 @@ export default {
     return {
       loading: false,
       redirect: undefined,
-      accountList: [],
+      userList: [],
       value: ''
     }
   },
@@ -51,9 +51,9 @@ export default {
     }
   },
   created() {
-    queryAccountList().then(response => {
+    queryAllUsers().then(response => {
       if (response) {
-        this.accountList = response
+        this.userList = response
         this.$message.success('数据加载成功')
       }
     })
@@ -63,7 +63,7 @@ export default {
     handleLogin() {
       if (this.value) {
         this.loading = true
-        this.$store.dispatch('account/login', this.value).then(path => {
+        this.$store.dispatch('user/login', this.value).then(path => {
           this.$router.push({ path: path })
           this.loading = false
         }).catch(() => {
