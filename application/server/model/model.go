@@ -1,13 +1,7 @@
 package model
 
-import (
-	"application/sql"
-	"gorm.io/gorm"
-	"encoding/json"
-)
-
-// DatasetMetadata 数据集元数据
-type DatasetMetadata struct {
+// Metadata 数据集元数据
+type Metadata struct {
 	Tasks      []string `json:"tasks" gorm:"type:json"`      // 以 JSON 格式存储
 	Modalities []string `json:"modalities" gorm:"type:json"` // 以 JSON 格式存储
 	Formats    []string `json:"formats" gorm:"type:json"`    // 以 JSON 格式存储
@@ -15,76 +9,51 @@ type DatasetMetadata struct {
 	Languages  []string `json:"languages" gorm:"type:json"`  // 以 JSON 格式存储
 	Libraries  []string `json:"libraries" gorm:"type:json"`  // 以 JSON 格式存储
 	Tags       []string `json:"tags" gorm:"type:json"`       // 以 JSON 格式存储
-	License    string   `json:"license"`                    // 普通字段
+	License    string   `json:"license"`                     // 普通字段
 }
 
-// MetadataBody 用于返回数据
-type MetadataBody struct {
-	Name     string          `json:"name"`
-	Owner    string          `json:"owner"`
-	Metadata DatasetMetadata `json:"metadata"` // 使用 DatasetMetadata 类型
+// User 用户
+type User struct {
+	ID   string `json:"id"`   // 用户ID
+	Name string `json:"name"` // 用户名
 }
 
-// MetadataTable 数据库表结构
-type MetadataTable struct {
-	Name     string          `gorm:"primaryKey" json:"name"`
-	Owner    string          `gorm:"primaryKey" json:"owner"`
-	Metadata json.RawMessage `json:"metadata" gorm:"type:json"` // 存储 JSON 数据
+// File 文件
+type File struct {
+	Hash           string `json:"hash"`            // 文件哈希 (key)
+	Size           int64  `json:"size"`            // 文件大小
+	ReferenceCount int32  `json:"reference_count"` // 引用计数
 }
 
-func InitializeDatabase(db *gorm.DB) error {
-	// 确保创建 MetadataTable 表
-	err := db.AutoMigrate(&MetadataTable{})
-	if err != nil {
-		return err
-	}
-	return nil
+// DatasetFile 数据集文件
+type DatasetFile struct {
+	Hash     string `json:"hash"`      // 文件哈希
+	FileName string `json:"file_name"` // 文件名
 }
 
-func CreateMetaData(metadataBody *MetadataBody) error {
-	if err := InitializeDatabase(sql.DB); err != nil {
-		return err
-	}
-
-	// 将 DatasetMetadata 转换为 JSON 数据
-	metadataJSON, err := json.Marshal(metadataBody.Metadata)
-	if err != nil {
-		return err
-	}
-
-	// 创建 MetadataTable 实例
-	tableData := MetadataTable{
-		Name:     metadataBody.Name,
-		Owner:    metadataBody.Owner,
-		Metadata: metadataJSON,
-	}
-
-	result := sql.DB.Create(&tableData)
-	if result.Error != nil {
-		return result.Error
-	}
-	return nil
+// Version 数据集的一个版本
+type Version struct {
+	Files        []DatasetFile `json:"files"`         // 文件列表
+	Rows         int32         `json:"rows"`          // 行数
+	CreationTime string        `json:"creation_time"` // 创建时间
+	ChangeLog    string        `json:"change_log"`    // 版本说明
 }
 
-func GetMetaData(name string, owner string) (*MetadataBody, error) {
-	var metadataTable MetadataTable
-	result := sql.DB.Where("name = ? AND owner = ?", name, owner).First(&metadataTable)
-	if result.Error != nil {
-		if result.Error == gorm.ErrRecordNotFound {
-			return nil, nil // 记录未找到
-		}
-		return nil, result.Error // 其他错误
-	}
+// Dataset 数据集
+type Dataset struct {
+	Owner     string    `json:"owner"`     // 所有者ID
+	Name      string    `json:"name"`      // 数据集名
+	Versions  []Version `json:"versions"`  // 版本列表
+	Downloads int32     `json:"downloads"` // 下载次数
+	Stars     int32     `json:"stars"`     // 收藏次数
+	Deleted   bool      `json:"deleted"`   // 已删除
+}
 
-	// 将 JSON 数据解析为 DatasetMetadata
-	var metadata DatasetMetadata
-	if err := json.Unmarshal(metadataTable.Metadata, &metadata); err != nil {
-		return nil, err
-	}
-
-	return &MetadataBody{
-		Name:     metadataTable.Name,
-		Owner:    metadataTable.Owner,
-		Metadata: metadata,
-	}, nil
+// Record 下载记录
+type Record struct {
+	DatasetOwner string        `json:"dataset_owner"` // 数据集所有者
+	DatasetName  string        `json:"dataset_name"`  // 数据集名
+	User         string        `json:"user"`          // 下载者ID
+	Files        []DatasetFile `json:"files"`         // 文件列表
+	Time         string        `json:"time"`          // 下载时间
 }
