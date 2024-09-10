@@ -20,3 +20,14 @@ export function queryUser(data) {
     data
   })
 }
+
+export function createUser(data) {
+  return request({
+    url: 'http://localhost:8888/api/v1/user/create',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    method: 'post',
+    data
+  })
+}

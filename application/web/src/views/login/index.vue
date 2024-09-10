@@ -19,18 +19,37 @@
         </el-option>
       </el-select>
 
-      <el-button :loading="loading" type="primary" style="width:100%;margin-bottom:30px;" @click.native.prevent="handleLogin">立即进入</el-button>
-
-      <div class="tips">
-        <span style="margin-right:20px;">Tips: 选择不同用户角色进行数据共享测试</span>
+      <!-- 按钮容器 -->
+      <div class="button-container">
+        <el-button :loading="loading" type="primary" class="action-button" @click.native.prevent="handleLogin">登录</el-button>
+        <el-button type="success" class="action-button" @click.native.prevent="showRegisterDialog">注册</el-button>
       </div>
 
+      <!-- 注册弹窗 -->
+      <el-dialog title="用户注册" :visible.sync="registerDialogVisible" width="30%" center>
+        <el-form ref="registerForm" :model="registerForm">
+          <el-form-item label="用户名">
+            <el-input v-model="registerForm.name"></el-input>
+          </el-form-item>
+          <el-form-item label="用户ID">
+            <el-input v-model="registerForm.id"></el-input>
+          </el-form-item>
+          <el-form-item label="密码">
+            <el-input type="password" v-model="registerForm.password"></el-input>
+          </el-form-item>
+        </el-form>
+        <div slot="footer" class="dialog-footer">
+          <el-button @click="registerDialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="handleRegister">注册</el-button>
+        </div>
+      </el-dialog>
     </el-form>
   </div>
 </template>
 
+
 <script>
-import { queryAllUsers } from '@/api/user'
+import { queryAllUsers, createUser} from '@/api/user'
 
 export default {
   name: 'Login',
@@ -39,7 +58,13 @@ export default {
       loading: false,
       redirect: undefined,
       userList: [],
-      value: ''
+      value: '',
+      registerDialogVisible: false, // 控制注册弹窗显示
+      registerForm: {
+        name: '',
+        id: '',
+        password: ''
+      }
     }
   },
   watch: {
@@ -75,36 +100,36 @@ export default {
     },
     selectGet(userId) {
       this.value = userId
+    },
+    showRegisterDialog() {
+      this.registerDialogVisible = true
+    },
+    handleRegister() {
+      if (this.registerForm.name && this.registerForm.id && this.registerForm.password) {
+        createUser(this.registerForm).then(() => {
+          this.$message.success('注册成功');
+          this.registerDialogVisible = false;
+        }).catch(() => {
+          this.$message.error('注册失败');
+        });
+      } else {
+        this.$message.error('请填写所有字段');
+      }
     }
   }
 }
 </script>
 
-
 <style lang="scss" scoped>
-$bg:#2d3a4b;
-$dark_gray:#889aa4;
-$light_gray:#eee;
-
 .login-container {
   min-height: 100%;
   width: 100%;
-  background: url('https://c7k8t9m10.github.io/medias/featureimages/8.jpg');
-  width:100%;
   height:100%;
-  position:fixed;
-  background-size:100% 100%;
+  position: fixed;
+  background-color: #f2f2f2; // 设置为淡灰色
+  background-size: 100% 100%;
   overflow: hidden;
-  .example {
-  font-family: 'alarm_clockregular', sans-serif;
-  .subtitle {
-      font-size: 30px;
-      color: #000000;
-      margin: 0px auto 40px auto;
-      text-align: center;
-      font-weight: bold;
-    }
-   }
+
   .login-form {
     position: relative;
     width: 520px;
@@ -113,54 +138,24 @@ $light_gray:#eee;
     margin: 0 auto;
     overflow: hidden;
   }
-  .login-select{
-   padding: 20px 0px 30px 0px;
-   min-height: 100%;
-   width: 100%;
-   background-color: transparent;
-   overflow: hidden;
-   text-align: center;
-  }
-  .tips {
-    font-size: 14px;
-    color: #fff;
-    margin-bottom: 10px;
 
-    span {
-      &:first-of-type {
-        margin-right: 16px;
-      }
-    }
+  .login-select {
+    padding: 20px 0px 30px 0px;
+    width: 100%;
+    background-color: transparent;
+    text-align: center;
   }
 
-  .svg-container {
-    padding: 6px 5px 6px 15px;
-    color: $dark_gray;
-    vertical-align: middle;
-    width: 30px;
-    display: inline-block;
+  .button-container {
+    display: flex;            // 使按钮横向排列
+    justify-content: space-between;  // 两个按钮之间留空
+    gap: 10px;                // 按钮之间的间距
+    margin-bottom: 30px;
   }
 
-  .title-container {
-    position: relative;
-
-    .title {
-      font-size: 26px;
-      color: $light_gray;
-      margin: 0px auto 40px auto;
-      text-align: center;
-      font-weight: bold;
-    }
-  }
-
-  .show-pwd {
-    position: absolute;
-    right: 10px;
-    top: 7px;
-    font-size: 16px;
-    color: $dark_gray;
-    cursor: pointer;
-    user-select: none;
+  .action-button {
+    flex: 1;                  // 使按钮均匀分布，占据相同宽度
   }
 }
 </style>
+

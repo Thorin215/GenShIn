@@ -55,3 +55,28 @@ func QueryUser(c *gin.Context) {
 
 	appG.Response(http.StatusOK, "成功", user)
 }
+
+func CreateUser(c *gin.Context) {
+	appG := app.Gin{C: c}
+	var body struct {
+		ID   string `json:"id" binding:"required"`
+		Name string `json:"name" binding:"required"`
+		Passwrod string `json:"password" binding:"required"`
+	}
+
+	if err := c.ShouldBindJSON(&body); err != nil {
+		appG.Response(http.StatusBadRequest, "失败", fmt.Sprintf("参数出错: %s", err.Error()))
+		return
+	}
+
+	userID := body.ID
+	userName := body.Name
+
+	resp, err := bc.ChannelExecute("createUser", [][]byte{[]byte(userID), []byte(userName)})
+	if err != nil {
+		appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("调用智能合约出错: %s", err.Error()))
+		return
+	}
+
+	appG.Response(http.StatusOK, "成功", resp)
+}
