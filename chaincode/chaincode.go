@@ -68,10 +68,6 @@ func (t *BlockChainGenshin) Invoke(stub shim.ChaincodeStubInterface) pb.Response
 		return api.QueryDatasetsByUser(stub, args)
 	case "queryDataset":
 		return api.QueryDataset(stub, args)
-	case "incrementDatasetStars":
-		return api.IncrementDatasetStars(stub, args)
-	case "incrementDatasetDownloads":
-		return api.IncrementDatasetDownloads(stub, args)
 	case "deleteDataset":
 		return api.DeleteDataset(stub, args)
 

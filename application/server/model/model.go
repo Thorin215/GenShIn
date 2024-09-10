@@ -41,12 +41,10 @@ type Version struct {
 
 // Dataset 数据集
 type Dataset struct {
-	Owner     string    `json:"owner"`     // 所有者ID
-	Name      string    `json:"name"`      // 数据集名
-	Versions  []Version `json:"versions"`  // 版本列表
-	Downloads int32     `json:"downloads"` // 下载次数
-	Stars     int32     `json:"stars"`     // 收藏次数
-	Deleted   bool      `json:"deleted"`   // 已删除
+	Owner    string    `json:"owner"`    // 所有者ID
+	Name     string    `json:"name"`     // 数据集名
+	Versions []Version `json:"versions"` // 版本列表
+	Deleted  bool      `json:"deleted"`  // 已删除
 }
 
 // Record 下载记录

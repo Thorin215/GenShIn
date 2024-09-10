@@ -2,10 +2,13 @@ package v1
 
 import (
 	bc "application/blockchain"
+	"application/model"
 	"application/pkg/app"
+	"application/pkg/utils"
 	"archive/zip"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"io"
 	"regexp"
@@ -87,8 +90,10 @@ func DownloadFile(c *gin.Context) {
 	appG := app.Gin{C: c}
 
 	var body struct {
-		Hash     string `json:"hash"`
-		FileName string `json:"filename"`
+		File         model.DatasetFile `json:"file"`
+		DatasetOwner string            `json:"dataset_owner"`
+		DatasetName  string            `json:"dataset_name"`
+		User         string            `json:"user"`
 	}
 
 	if err := c.ShouldBindJSON(&body); err != nil {
@@ -96,8 +101,8 @@ func DownloadFile(c *gin.Context) {
 		return
 	}
 
-	hash := body.Hash
-	fileName := body.FileName
+	hash := body.File.Hash
+	fileName := body.File.FileName
 
 	// 检查 hash 是否为 SHA-256
 	if ok, _ := regexp.MatchString("^[a-f0-9]{64}$", hash); !ok {
@@ -112,19 +117,40 @@ func DownloadFile(c *gin.Context) {
 		return
 	}
 
+	// 将 [File] 转换为 JSON 字符串
+	file, err := json.Marshal([]model.DatasetFile{body.File})
+	if err != nil {
+		appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("序列化出错: %s", err.Error()))
+		return
+	}
+
+	// 上传下载记录
+	args := [][]byte{
+		[]byte(body.DatasetOwner),     // args[0]: 所有者ID | string
+		[]byte(body.DatasetName),      // args[1]: 数据集名 | string
+		[]byte(body.User),             // args[2]: 下载者ID | string
+		[]byte(file),                  // args[3]: 文件信息 []DatasetFile | string (JSON)
+		[]byte(utils.GetTimeString()), // args[4]: 下载时间 | string
+	}
+
+	_, err = bc.ChannelExecute("createRecord", args)
+	if err != nil {
+		appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("调用智能合约出错: %s", err.Error()))
+		return
+	}
+
 	appG.C.FileAttachment(filePath, fileName)
 }
 
 func DownloadFilesCompressed(c *gin.Context) {
 	appG := app.Gin{C: c}
 
-	type File struct {
-		Hash     string `json:"hash"`
-		FileName string `json:"filename"`
-	}
 	var body struct {
-		Files   []File `json:"files"`
-		ZipName string `json:"zipname"`
+		Files        []model.DatasetFile `json:"files"`
+		ZipName      string              `json:"zipname"`
+		DatasetOwner string              `json:"dataset_owner"`
+		DatasetName  string              `json:"dataset_name"`
+		User         string              `json:"user"`
 	}
 
 	// 解析 Body 参数
@@ -147,6 +173,28 @@ func DownloadFilesCompressed(c *gin.Context) {
 			appG.Response(http.StatusNotFound, "失败", fmt.Sprintf("文件不存在: %s", file.Hash))
 			return
 		}
+	}
+
+	// 将 Files 转换为 JSON 字符串
+	files, err := json.Marshal(body.Files)
+	if err != nil {
+		appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("序列化出错: %s", err.Error()))
+		return
+	}
+
+	// 上传下载记录
+	args := [][]byte{
+		[]byte(body.DatasetOwner),     // args[0]: 所有者ID | string
+		[]byte(body.DatasetName),      // args[1]: 数据集名 | string
+		[]byte(body.User),             // args[2]: 下载者ID | string
+		[]byte(files),                 // args[3]: 文件列表 []DatasetFile | string (JSON)
+		[]byte(utils.GetTimeString()), // args[4]: 下载时间 | string
+	}
+
+	_, err = bc.ChannelExecute("createRecord", args)
+	if err != nil {
+		appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("调用智能合约出错: %s", err.Error()))
+		return
 	}
 
 	// 1. 创建一个临时压缩文件
