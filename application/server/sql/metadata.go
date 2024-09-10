@@ -2,7 +2,7 @@ package sql
 
 import (
 	"application/model"
-	"encoding/json"
+	// "encoding/json"
 
 	"gorm.io/gorm"
 )
@@ -16,9 +16,16 @@ type MetadataBody struct {
 
 // MetadataTable 数据库表结构
 type MetadataTable struct {
-	Owner    string          `gorm:"primaryKey" json:"owner"`
-	Name     string          `gorm:"primaryKey" json:"name"`
-	Metadata json.RawMessage `json:"metadata" gorm:"type:json"` // 存储 JSON 数据
+	Owner      string   `gorm:"primaryKey" json:"owner"`
+	Name       string   `gorm:"primaryKey" json:"name"`
+	Tasks      []string `json:"tasks" gorm:"type:json"`      // 以 JSON 格式存储
+	Modalities []string `json:"modalities" gorm:"type:json"` // 以 JSON 格式存储
+	Formats    []string `json:"formats" gorm:"type:json"`    // 以 JSON 格式存储
+	SubTasks   []string `json:"sub_tasks" gorm:"type:json"`  // 以 JSON 格式存储
+	Languages  []string `json:"languages" gorm:"type:json"`  // 以 JSON 格式存储
+	Libraries  []string `json:"libraries" gorm:"type:json"`  // 以 JSON 格式存储
+	Tags       []string `json:"tags" gorm:"type:json"`       // 以 JSON 格式存储
+	License    string   `json:"license" gorm:"type:json"`    // 以 JSON 格式存储
 }
 
 func MigrateMetadata(db *gorm.DB) error {
@@ -31,19 +38,21 @@ func MigrateMetadata(db *gorm.DB) error {
 }
 
 func CreateMetaData(metadataBody *MetadataBody) error {
-	// 将 Metadata 转换为 JSON 数据
-	metadataJSON, err := json.Marshal(metadataBody.Metadata)
-	if err != nil {
-		return err
-	}
-
-	// 创建 MetadataTable 实例
+	// 创建 MetadataTable 实例并映射 MetadataBody 的各字段
 	tableData := MetadataTable{
-		Owner:    metadataBody.Owner,
-		Name:     metadataBody.Name,
-		Metadata: metadataJSON,
+		Owner:      metadataBody.Owner,
+		Name:       metadataBody.Name,
+		Tasks:      metadataBody.Metadata.Tasks,
+		Modalities: metadataBody.Metadata.Modalities,
+		Formats:    metadataBody.Metadata.Formats,
+		SubTasks:   metadataBody.Metadata.SubTasks,
+		Languages:  metadataBody.Metadata.Languages,
+		Libraries:  metadataBody.Metadata.Libraries,
+		Tags:       metadataBody.Metadata.Tags,
+		License:    metadataBody.Metadata.License,
 	}
 
+	// 存入数据库
 	result := DB.Create(&tableData)
 	if result.Error != nil {
 		return result.Error
@@ -61,10 +70,16 @@ func GetMetaData(name string, owner string) (*MetadataBody, error) {
 		return nil, result.Error // 其他错误
 	}
 
-	// 将 JSON 数据解析为 Metadata
-	var metadata model.Metadata
-	if err := json.Unmarshal(metadataTable.Metadata, &metadata); err != nil {
-		return nil, err
+	// 将 MetadataTable 的字段映射回 Metadata
+	metadata := model.Metadata{
+		Tasks:      metadataTable.Tasks,
+		Modalities: metadataTable.Modalities,
+		Formats:    metadataTable.Formats,
+		SubTasks:   metadataTable.SubTasks,
+		Languages:  metadataTable.Languages,
+		Libraries:  metadataTable.Libraries,
+		Tags:       metadataTable.Tags,
+		License:    metadataTable.License,
 	}
 
 	return &MetadataBody{
