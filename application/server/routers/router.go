@@ -30,7 +30,7 @@ func InitRouter() *gin.Engine {
 		apiV1.POST("/user", v1.QueryUser)
 		apiV1.POST("/user/all", v1.QueryAllUsers)
 		apiV1.POST("/user/create", v1.CreateUser)
-		
+		apiV1.POST("/user/login", v1.CheckUserLogin)
 		// dataset
 		apiV1.POST("/dataset/create", v1.CreateDataset)
 		apiV1.POST("/dataset/all", v1.QueryAllDatasets)

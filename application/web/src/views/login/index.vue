@@ -7,7 +7,7 @@
       <div class="title-container">
         <h3 class="title">基于区块链的AI训练数据共享系统</h3>
       </div>
-      <el-select v-model="value" placeholder="请选择用户角色" class="login-select" @change="selectGet">
+      <el-select v-model="loginForm.id" placeholder="请选择用户角色" class="login-select" @change="selectGet">
         <el-option
           v-for="item in userList"
           :key="item.id"
@@ -18,6 +18,10 @@
           <span style="float: right; color: #8492a6; font-size: 13px">{{ item.id }}</span>
         </el-option>
       </el-select>
+
+      <el-form-item label="密码">
+        <el-input type="password" v-model="loginForm.password" placeholder="请输入密码"></el-input>
+      </el-form-item>
 
       <!-- 按钮容器 -->
       <div class="button-container">
@@ -47,9 +51,8 @@
   </div>
 </template>
 
-
 <script>
-import { queryAllUsers, createUser} from '@/api/user'
+import { queryAllUsers, createUser, checkLogin } from '@/api/user'
 
 export default {
   name: 'Login',
@@ -58,7 +61,10 @@ export default {
       loading: false,
       redirect: undefined,
       userList: [],
-      value: '',
+      loginForm: {
+        id: '',
+        password: ''
+      },
       registerDialogVisible: false, // 控制注册弹窗显示
       registerForm: {
         name: '',
@@ -86,20 +92,25 @@ export default {
 
   methods: {
     handleLogin() {
-      if (this.value) {
+      if (this.loginForm.id && this.loginForm.password) {
         this.loading = true
-        this.$store.dispatch('user/login', this.value).then(path => {
-          this.$router.push({ path: path })
-          this.loading = false
+        checkLogin(this.loginForm).then(reponse => {
+          if(reponse === '登录成功'){          
+            this.$store.dispatch('user/login', this.loginForm.id).then(path => {
+            this.$router.push({ path: path })})
+            this.loading = false
+          }else {
+            this.$message.error('登录失败')
+          }
         }).catch(() => {
           this.loading = false
         })
       } else {
-        this.$message('请选择用户角色')
+        this.$message.error('请选择用户角色和输入密码')
       }
     },
     selectGet(userId) {
-      this.value = userId
+      this.loginForm.id = userId
     },
     showRegisterDialog() {
       this.registerDialogVisible = true
@@ -124,7 +135,7 @@ export default {
 .login-container {
   min-height: 100%;
   width: 100%;
-  height:100%;
+  height: 100%;
   position: fixed;
   background-color: #f2f2f2; // 设置为淡灰色
   background-size: 100% 100%;

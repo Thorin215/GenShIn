@@ -31,3 +31,14 @@ export function createUser(data) {
     data
   })
 }
+
+export function checkLogin(data) {
+  return request({
+    url: 'http://localhost:8888/api/v1/user/login',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    method: 'post',
+    data
+  })
+}
