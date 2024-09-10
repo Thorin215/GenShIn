@@ -98,13 +98,6 @@ func ValidateDataset(dataset Dataset) error {
 		return errors.New("Dataset Name must contain only letters, numbers, and underscores")
 	}
 
-	if dataset.Downloads < 0 {
-		return errors.New("Downloads must be a non-negative integer")
-	}
-	if dataset.Stars < 0 {
-		return errors.New("Stars must be a non-negative integer")
-	}
-
 	for _, version := range dataset.Versions {
 		if err := ValidateVersion(version); err != nil {
 			return err

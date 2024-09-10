@@ -49,12 +49,10 @@ func CreateDataset(stub shim.ChaincodeStubInterface, args []string) pb.Response 
 	}
 
 	dataset := model.Dataset{
-		Owner:     args[0],
-		Name:      args[1],
-		Versions:  []model.Version{},
-		Downloads: 0,
-		Stars:     0,
-		Deleted:   false,
+		Owner:    args[0],
+		Name:     args[1],
+		Versions: []model.Version{},
+		Deleted:  false,
 	}
 
 	if err := model.ValidateDataset(dataset); err != nil {
@@ -227,90 +225,6 @@ func QueryDataset(stub shim.ChaincodeStubInterface, args []string) pb.Response {
 	}
 
 	return shim.Success(dataset)
-}
-
-// IncrementDatasetStars 更新数据集点赞数
-// args[0]: 所有者ID | string
-// args[1]: 数据集名字 | string
-// args[2]: 增加点赞数 | string (int32, default = 1)
-func IncrementDatasetStars(stub shim.ChaincodeStubInterface, args []string) pb.Response {
-	if len(args) != 2 && len(args) != 3 {
-		return shim.Error("IncrementDatasetStars-参数数量错误")
-	}
-
-	if exist, err := checkDatasetExist(stub, args[0], args[1]); err != nil {
-		return shim.Error(fmt.Sprintf("IncrementDatasetStars-查询数据集出错: %s", err))
-	} else if !exist {
-		return shim.Error("IncrementDatasetStars-参数错误: 数据集不存在")
-	}
-
-	dataset, err := getDataset(stub, args[0], args[1])
-	if err != nil {
-		return shim.Error(fmt.Sprintf("IncrementDatasetStars-查询数据集出错: %s", err))
-	}
-
-	if dataset.Deleted {
-		return shim.Error("IncrementDatasetStars-参数错误: 数据集已删除")
-	}
-
-	if len(args) == 2 {
-		dataset.Stars++
-	} else {
-		stars := utils.Str2Int32(args[2])
-		if stars <= 0 {
-			return shim.Error("IncrementDatasetStars-参数错误: 必须为正整数")
-		}
-
-		dataset.Stars += stars
-	}
-
-	err = utils.WriteLedger(dataset, stub, model.DatasetKey, []string{dataset.Owner, dataset.Name})
-	if err != nil {
-		return shim.Error(fmt.Sprintf("IncrementDatasetStars-写入账本出错: %s", err))
-	}
-
-	return shim.Success(nil)
-}
-
-// IncrementDatasetDownloads 更新数据集下载数
-// args[0]: 所有者ID | string
-// args[1]: 数据集名字 | string
-// args[2]: 增加下载数 | string (int32, default = 1)
-func IncrementDatasetDownloads(stub shim.ChaincodeStubInterface, args []string) pb.Response {
-	if len(args) != 2 && len(args) != 3 {
-		return shim.Error("IncrementDatasetDownloads-参数数量错误")
-	}
-
-	if exist, err := checkDatasetExist(stub, args[0], args[1]); err != nil {
-		return shim.Error(fmt.Sprintf("IncrementDatasetDownloads-查询数据集出错: %s", err))
-	} else if !exist {
-		return shim.Error("IncrementDatasetDownloads-参数错误: 数据集不存在")
-	}
-
-	dataset, err := getDataset(stub, args[0], args[1])
-	if err != nil {
-		return shim.Error(fmt.Sprintf("IncrementDatasetDownloads-查询数据集出错: %s", err))
-	}
-
-	if dataset.Deleted {
-		return shim.Error("IncrementDatasetDownloads-参数错误: 数据集已删除")
-	}
-
-	if len(args) == 2 {
-		dataset.Downloads++
-	} else {
-		downloads := utils.Str2Int32(args[2])
-		if downloads <= 0 {
-			return shim.Error("IncrementDatasetDownloads-参数错误: 必须为正整数")
-		}
-		dataset.Downloads += downloads
-	}
-
-	err = utils.WriteLedger(dataset, stub, model.DatasetKey, []string{dataset.Owner, dataset.Name})
-	if err != nil {
-		return shim.Error(fmt.Sprintf("IncrementDatasetDownloads-写入账本出错: %s", err))
-	}
-	return shim.Success(nil)
 }
 
 // DeleteDataset 删除数据集

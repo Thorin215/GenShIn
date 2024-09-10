@@ -299,92 +299,32 @@ func testDataset(t *testing.T) {
 			[]byte(ToJson(dataset_version2)),
 		}).Payload))
 
-	fmt.Printf("\n10: IncrementDatasetStars (default +stars) [success]\n%s",
-		string(checkInvoke(t, stub, true, [][]byte{
-			[]byte("incrementDatasetStars"),
-			[]byte(dataset_owner),
-			[]byte(dataset_name),
-		}).Payload))
-
-	fmt.Printf("\n11: IncrementDatasetStars (specify +stars=3) [success]\n%s",
-		string(checkInvoke(t, stub, true, [][]byte{
-			[]byte("incrementDatasetStars"),
-			[]byte(dataset_owner),
-			[]byte(dataset_name),
-			[]byte("3"),
-		}).Payload))
-
-	fmt.Printf("\n12: IncrementDatasetStars [failed] (dataset not exist)\n%s",
-		string(checkInvoke(t, stub, false, [][]byte{
-			[]byte("incrementDatasetStars"),
-			[]byte(dataset_owner),
-			[]byte("test_dataset_not_exist"),
-		}).Payload))
-
-	fmt.Printf("\n14: IncreaseDatasetStars [failed] (invalid +stars)\n%s",
-		string(checkInvoke(t, stub, false, [][]byte{
-			[]byte("incrementDatasetStars"),
-			[]byte(dataset_owner),
-			[]byte(dataset_name),
-			[]byte("-1"),
-		}).Payload))
-
-	fmt.Printf("\n15: IncrementDatasetDownloads (default +downloads) [success]\n%s",
-		string(checkInvoke(t, stub, true, [][]byte{
-			[]byte("incrementDatasetDownloads"),
-			[]byte(dataset_owner),
-			[]byte(dataset_name),
-		}).Payload))
-
-	fmt.Printf("\n16: IncrementDatasetDownloads (specify +downloads=3) [success]\n%s",
-		string(checkInvoke(t, stub, true, [][]byte{
-			[]byte("incrementDatasetDownloads"),
-			[]byte(dataset_owner),
-			[]byte(dataset_name),
-			[]byte("3"),
-		}).Payload))
-
-	fmt.Printf("\n17: IncrementDatasetDownloads [failed] (dataset not exist)\n%s",
-		string(checkInvoke(t, stub, false, [][]byte{
-			[]byte("incrementDatasetDownloads"),
-			[]byte(dataset_owner),
-			[]byte("test_dataset_not_exist"),
-		}).Payload))
-
-	fmt.Printf("\n18: IncreaseDatasetDownloads [failed] (invalid +downloads)\n%s",
-		string(checkInvoke(t, stub, false, [][]byte{
-			[]byte("incrementDatasetDownloads"),
-			[]byte(dataset_owner),
-			[]byte(dataset_name),
-			[]byte("-1"),
-		}).Payload))
-
-	fmt.Printf("\n19: QueryDataset [success]\n%s",
+	fmt.Printf("\n10: QueryDataset [success]\n%s",
 		string(checkInvoke(t, stub, true, [][]byte{
 			[]byte("queryDataset"),
 			[]byte(dataset_owner),
 			[]byte(dataset_name),
 		}).Payload))
 
-	fmt.Printf("\n20: QueryAllDatasets [success]\n%s",
+	fmt.Printf("\n11: QueryAllDatasets [success]\n%s",
 		string(checkInvoke(t, stub, true, [][]byte{
 			[]byte("queryAllDatasets"),
 		}).Payload))
 
-	fmt.Printf("\n21: QueryDatasetsByUser [success]\n%s",
+	fmt.Printf("\n12: QueryDatasetsByUser [success]\n%s",
 		string(checkInvoke(t, stub, true, [][]byte{
 			[]byte("queryDatasetsByUser"),
 			[]byte(dataset_owner),
 		}).Payload))
 
-	fmt.Printf("\n22: DeleteDataset [success]\n%s",
+	fmt.Printf("\n13: DeleteDataset [success]\n%s",
 		string(checkInvoke(t, stub, true, [][]byte{
 			[]byte("deleteDataset"),
 			[]byte(dataset_owner),
 			[]byte(dataset_name),
 		}).Payload))
 
-	fmt.Printf("\n23: AddDatasetVersion [failed] (dataset deleted)\n%s",
+	fmt.Printf("\n14: AddDatasetVersion [failed] (dataset deleted)\n%s",
 		string(checkInvoke(t, stub, false, [][]byte{
 			[]byte("addDatasetVersion"),
 			[]byte(dataset_owner),
