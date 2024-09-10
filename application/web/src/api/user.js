@@ -2,7 +2,7 @@ import request from '@/utils/request'
 
 export function queryAllUsers() {
   return request({
-    url: 'http://localhost:8888/api/v1/queryAllUsers',
+    url: 'http://localhost:8888/api/v1/user/all',
     headers: {
       'Content-Type': 'application/json'
     },
@@ -12,7 +12,7 @@ export function queryAllUsers() {
 
 export function queryUser(data) {
   return request({
-    url: 'http://localhost:8888/api/v1/queryUser',
+    url: 'http://localhost:8888/api/v1/user',
     headers: {
       'Content-Type': 'application/json'
     },

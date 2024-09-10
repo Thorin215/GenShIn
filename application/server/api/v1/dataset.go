@@ -17,9 +17,9 @@ import (
 func CreateDataset(c *gin.Context) {
 	appG := app.Gin{C: c}
 	var body struct {
-		Owner    string         `json:"owner"`
-		Name     string         `json:"name"`
-		Metadata model.Metadata `json:"metadata"`
+		Owner    string         `json:"owner" binding:"required"`
+		Name     string         `json:"name" binding:"required"`
+		Metadata model.Metadata `json:"metadata" binding:"required"`
 	}
 
 	if err := c.ShouldBindJSON(&body); err != nil {
@@ -74,8 +74,8 @@ func QueryAllDatasets(c *gin.Context) {
 func QueryDatasetMetadata(c *gin.Context) {
 	appG := app.Gin{C: c}
 	var body struct {
-		Owner string `json:"owner"`
-		Name  string `json:"name"`
+		Owner string `json:"owner" binding:"required"`
+		Name  string `json:"name" binding:"required"`
 	}
 
 	if err := c.ShouldBindJSON(&body); err != nil {
@@ -109,9 +109,9 @@ func QueryDatasetMetadata(c *gin.Context) {
 func AddDatasetVersion(c *gin.Context) {
 	appG := app.Gin{C: c}
 	var body struct {
-		Owner   string        `json:"owner"`
-		Name    string        `json:"name"`
-		Version model.Version `json:"version"`
+		Owner   string        `json:"owner" binding:"required"`
+		Name    string        `json:"name" binding:"required"`
+		Version model.Version `json:"version" binding:"required"`
 	}
 
 	if err := c.ShouldBindJSON(&body); err != nil {

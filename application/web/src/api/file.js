@@ -4,7 +4,7 @@ import FileSaver from 'file-saver'
 
 export function uploadFile(formData) {
     return request({
-        url: 'http://localhost:8888/api/v1/uploadFile',
+        url: 'http://localhost:8888/api/v1/file/upload',
         method: 'post',
         headers: {
             'Content-Type': 'multipart/form-data'
@@ -15,7 +15,7 @@ export function uploadFile(formData) {
 
 export function downloadFile(data) {
     return Axios({
-        url: 'http://localhost:8888/api/v1/downloadFile',
+        url: 'http://localhost:8888/api/v1/file/download',
         responseType: 'blob',
         method: 'post',
         headers: {
@@ -30,7 +30,7 @@ export function downloadFile(data) {
 
 export function downloadFilesCompressed(data) {
     return Axios({
-        url: 'http://localhost:8888/api/v1/downloadFilesCompressed',
+        url: 'http://localhost:8888/api/v1/file/download/zip',
         method: 'post',
         responseType: 'blob',
         headers: {
