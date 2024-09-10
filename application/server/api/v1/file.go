@@ -90,10 +90,10 @@ func DownloadFile(c *gin.Context) {
 	appG := app.Gin{C: c}
 
 	var body struct {
-		File         model.DatasetFile `json:"file"`
-		DatasetOwner string            `json:"dataset_owner"`
-		DatasetName  string            `json:"dataset_name"`
-		User         string            `json:"user"`
+		File         model.DatasetFile `json:"file" binding:"required"`
+		DatasetOwner string            `json:"dataset_owner" binding:"required"`
+		DatasetName  string            `json:"dataset_name" binding:"required"`
+		User         string            `json:"user" binding:"required"`
 	}
 
 	if err := c.ShouldBindJSON(&body); err != nil {
@@ -146,11 +146,11 @@ func DownloadFilesCompressed(c *gin.Context) {
 	appG := app.Gin{C: c}
 
 	var body struct {
-		Files        []model.DatasetFile `json:"files"`
-		ZipName      string              `json:"zipname"`
-		DatasetOwner string              `json:"dataset_owner"`
-		DatasetName  string              `json:"dataset_name"`
-		User         string              `json:"user"`
+		Files        []model.DatasetFile `json:"files" binding:"required"`
+		ZipName      string              `json:"zipname" binding:"required"`
+		DatasetOwner string              `json:"dataset_owner" binding:"required"`
+		DatasetName  string              `json:"dataset_name" binding:"required"`
+		User         string              `json:"user" binding:"required"`
 	}
 
 	// 解析 Body 参数

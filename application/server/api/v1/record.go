@@ -16,7 +16,7 @@ func QueryRecordsByUser(c *gin.Context) {
 	appG := app.Gin{C: c}
 
 	var body struct {
-		User string `json:"user"`
+		User string `json:"user" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&body); err != nil {
 		appG.Response(http.StatusBadRequest, "失败", fmt.Sprintf("参数错误: %s", err))
@@ -42,8 +42,8 @@ func QueryRecordsByDataset(c *gin.Context) {
 	appG := app.Gin{C: c}
 
 	var body struct {
-		Owner string `json:"owner"`
-		Name  string `json:"name"`
+		Owner string `json:"owner" binding:"required"`
+		Name  string `json:"name" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&body); err != nil {
 		appG.Response(http.StatusBadRequest, "失败", fmt.Sprintf("参数错误: %s", err))

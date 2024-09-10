@@ -31,7 +31,7 @@ func QueryAllUsers(c *gin.Context) {
 func QueryUser(c *gin.Context) {
 	appG := app.Gin{C: c}
 	var body struct {
-		ID string `json:"id"`
+		ID string `json:"id" binding:"required"`
 	}
 
 	if err := c.ShouldBindJSON(&body); err != nil {
