@@ -27,23 +27,23 @@ func InitRouter() *gin.Engine {
 		apiV1.GET("/hello", v1.Hello)
 
 		// user
-		apiV1.POST("/queryUser", v1.QueryUser)
-		apiV1.POST("/queryAllUsers", v1.QueryAllUsers)
+		apiV1.POST("/user", v1.QueryUser)
+		apiV1.POST("/user/all", v1.QueryAllUsers)
 
 		// dataset
-		apiV1.POST("/createDataset", v1.CreateDataset)
-		apiV1.POST("/queryAllDatasets", v1.QueryAllDatasets)
-		apiV1.POST("/queryDatasetMetadata", v1.QueryDatasetMetadata)
-		apiV1.POST("/addDatasetVersion", v1.AddDatasetVersion)
+		apiV1.POST("/dataset/create", v1.CreateDataset)
+		apiV1.POST("/dataset/all", v1.QueryAllDatasets)
+		apiV1.POST("/dataset/metadata", v1.QueryDatasetMetadata)
+		apiV1.POST("/dataset/version/create", v1.AddDatasetVersion)
 
 		// file
-		apiV1.POST("/uploadFile", v1.UploadFile)
-		apiV1.POST("/downloadFile", v1.DownloadFile)
-		apiV1.POST("/downloadFilesCompressed", v1.DownloadFilesCompressed)
+		apiV1.POST("/file/upload", v1.UploadFile)
+		apiV1.POST("/file/download", v1.DownloadFile)
+		apiV1.POST("/file/download/zip", v1.DownloadFilesCompressed)
 
 		// record
-		apiV1.POST("/queryRecordsByUser", v1.QueryRecordsByUser)
-		apiV1.POST("/queryRecordsByDataset", v1.QueryRecordsByDataset)
+		apiV1.POST("/record/by/user", v1.QueryRecordsByUser)
+		apiV1.POST("/record/by/dataset", v1.QueryRecordsByDataset)
 
 	}
 	return r
