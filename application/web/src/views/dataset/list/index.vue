@@ -155,7 +155,10 @@ export default {
       try {
         await downloadFilesCompressed({
           files: files,
-          zipname: zipname
+          zipname: zipname,
+          dataset_owner: this.selectedDataset.owner,
+          dataset_name: this.selectedDataset.name,
+          user: this.userId
         });
       } catch (error) {
         console.error('下载文件失败:', error);

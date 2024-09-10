@@ -41,6 +41,10 @@ func InitRouter() *gin.Engine {
 		apiV1.POST("/downloadFile", v1.DownloadFile)
 		apiV1.POST("/downloadFilesCompressed", v1.DownloadFilesCompressed)
 
+		// record
+		apiV1.POST("/queryRecordsByUser", v1.QueryRecordsByUser)
+		apiV1.POST("/queryRecordsByDataset", v1.QueryRecordsByDataset)
+
 	}
 	return r
 }
