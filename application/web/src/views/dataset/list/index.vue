@@ -21,6 +21,7 @@
           <!-- Removed download button -->
           <el-button type="success" icon="el-icon-edit" @click="viewLogs(dataset)">查看修改日志</el-button>
           <el-button type="info" icon="el-icon-info" @click="viewMetadata(dataset)">查看详细信息</el-button>
+          <el-button type="danger" icon="el-icon-delete" @click="deleteDataset(dataset)">删除</el-button>
         </div>
       </el-card>
     </div>
@@ -78,7 +79,7 @@
 
 <script>
 import { mapGetters } from 'vuex';
-import { queryAllDatasets, queryDatasetMetadata } from '@/api/dataset';
+import { queryAllDatasets, queryDatasetMetadata, deleteDataset, queryAllVersions } from '@/api/dataset';
 import { downloadFilesCompressed } from '@/api/file';
 
 export default {
@@ -120,11 +121,37 @@ export default {
         this.$message.error('数据加载失败');
       }
     },
-    viewLogs(dataset) {
-      this.selectedDataset = dataset;
-      this.logs = dataset.versions; // 将选中的数据集版本作为日志
-      this.dialogVisible = true;
+    async deleteDataset(dataset) {
+      try {
+        if(this.userId === dataset.owner) {
+          const reponse2 = await deleteDataset({id: dataset.id, owner: dataset.owner}); // Use your API call to delete the dataset
+          if(reponse2 != "success") {
+            this.$message.error('删除失败');
+            return;
+          }
+          this.datasets = this.datasets.filter(d => d.id !== dataset.id); // Update UI after deletion
+          this.$message.success(`删除 ${dataset.name} 成功`);
+        }else {
+          this.$message.error('不能删除他人的数据集');
+          return;
+        }  
+      } catch (error) {
+        console.error('删除数据集失败:', error);
+        this.$message.error(`删除失败: ${error.message || error}`);
+      }
     },
+    async viewLogs(dataset) {
+  this.selectedDataset = dataset;
+  try {
+    // 使用 queryAllVersions 来获取该数据集的所有版本信息
+    const response = await queryAllVersions({ owner: dataset.owner, name: dataset.name });
+    this.logs = response; // 将 API 返回的版本信息作为日志
+    this.dialogVisible = true; // 打开日志对话框
+  } catch (error) {
+    console.error('Error fetching versions:', error);
+    this.$message.error('获取修改日志失败');
+  }
+},
     async viewMetadata(dataset) {
       try {
         const response2 = await queryDatasetMetadata({ owner: dataset.owner, name: dataset.name });

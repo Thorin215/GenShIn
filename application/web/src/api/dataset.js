@@ -42,3 +42,14 @@ export function addDatasetVersion(data){
     data
   })
 }
+
+export function queryAllVersions(data){
+  return request({
+    url: 'http://localhost:8888/api/v1/dataset/version/all',
+    method: 'post',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    data
+  })
+}
