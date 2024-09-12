@@ -5,6 +5,7 @@ import (
 	"application/model"
 	"application/pkg/app"
 	"application/pkg/utils"
+	"application/sql"
 	"archive/zip"
 	"crypto/sha256"
 	"encoding/hex"
@@ -139,6 +140,12 @@ func DownloadFile(c *gin.Context) {
 		return
 	}
 
+	// 增加 Downloads 计数
+	if err := sql.IncrementDownloads(body.DatasetOwner, body.DatasetName); err != nil {
+		appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("数据库出错: %s", err.Error()))
+		return
+	}
+
 	appG.C.FileAttachment(filePath, fileName)
 }
 
@@ -194,6 +201,12 @@ func DownloadFilesCompressed(c *gin.Context) {
 	_, err = bc.ChannelExecute("createRecord", args)
 	if err != nil {
 		appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("调用智能合约出错: %s", err.Error()))
+		return
+	}
+
+	// 增加 Downloads 计数
+	if err := sql.IncrementDownloads(body.DatasetOwner, body.DatasetName); err != nil {
+		appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("数据库出错: %s", err.Error()))
 		return
 	}
 

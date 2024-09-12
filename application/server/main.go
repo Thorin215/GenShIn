@@ -32,7 +32,11 @@ func main() {
 	}
 
 	sql.InitMysql(conf.Conf.MysqlConfig)
-	sql.Migrate()
+	err = sql.Migrate()
+	if err != nil {
+		log.Printf("数据库迁移失败 %s", err)
+		return
+	}
 
 	blockchain.Init()
 	go cron.Init()
@@ -48,23 +52,3 @@ func main() {
 		log.Printf("start http server failed %s", err)
 	}
 }
-
-// import (
-//     "github.com/gin-gonic/gin"
-//     "github.com/gin-contrib/cors"
-// )
-
-// func main() {
-//     router := gin.Default()
-
-//     // CORS 配置
-//     router.Use(cors.New(cors.Config{
-//         AllowOrigins:     []string{"http://localhost:8000"},
-//         AllowMethods:     []string{"GET", "POST", "PUT", "DELETE"},
-//         AllowHeaders:     []string{"Origin", "Content-Type"},
-//         AllowCredentials: true,
-//     }))
-
-//     // 其他路由定义...
-//     router.Run(":8888")
-// }
