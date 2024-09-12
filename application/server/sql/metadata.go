@@ -92,8 +92,9 @@
 package sql
 
 import (
-	"strings"
 	"application/model"
+	"strings"
+
 	"gorm.io/gorm"
 )
 
@@ -116,6 +117,11 @@ type MetadataTable struct {
 	Libraries  string `json:"libraries"`  // 存储为字符串
 	Tags       string `json:"tags"`       // 存储为字符串
 	License    string `json:"license"`    // 普通字符串
+}
+
+type QueryMetadataResp struct {
+	Owner string `json:"owner"`
+	Name  string `json:"name"`
 }
 
 // MigrateMetadata 确保创建 MetadataTable 表
@@ -197,4 +203,51 @@ func GetMetaData(name string, owner string) (*MetadataBody, error) {
 		Name:     metadataTable.Name,
 		Metadata: metadata,
 	}, nil
+}
+
+// QueryMetadata 根据输入查询数据
+func QueryMetadata(metadata model.Metadata) ([]QueryMetadataResp, error) {
+	var results []MetadataTable
+
+	query := DB.Model(&MetadataTable{})
+
+	if metadata.Tasks != nil {
+		query = query.Where("tasks IN ?", metadata.Tasks)
+	}
+	if metadata.Modalities != nil {
+		query = query.Where("modalities IN ?", metadata.Modalities)
+	}
+	if metadata.Formats != nil {
+		query = query.Where("formats IN ?", metadata.Formats)
+	}
+	if metadata.SubTasks != nil {
+		query = query.Where("sub_tasks IN ?", metadata.SubTasks)
+	}
+	if metadata.Languages != nil {
+		query = query.Where("languages IN ?", metadata.Languages)
+	}
+	if metadata.Libraries != nil {
+		query = query.Where("libraries IN ?", metadata.Libraries)
+	}
+	if metadata.Tags != nil {
+		query = query.Where("tags IN ?", metadata.Tags)
+	}
+	if metadata.License != "" {
+		query = query.Where("license = ?", metadata.License)
+	}
+
+	err := query.Find(&results).Error
+	if err != nil {
+		return nil, err
+	}
+
+	var resp []QueryMetadataResp
+	for _, result := range results {
+		resp = append(resp, QueryMetadataResp{
+			Owner: result.Owner,
+			Name:  result.Name,
+		})
+	}
+
+	return resp, nil
 }

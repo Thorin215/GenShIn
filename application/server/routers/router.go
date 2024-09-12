@@ -34,6 +34,7 @@ func InitRouter() *gin.Engine {
 		apiV1.POST("/createDataset", v1.CreateDataset)
 		apiV1.POST("/queryAllDatasets", v1.QueryAllDatasets)
 		apiV1.POST("/queryDatasetMetadata", v1.QueryDatasetMetadata)
+		apiV1.POST("/querySpecifiedMetadata", v1.QuerySpecifiedMetadata)
 		apiV1.POST("/addDatasetVersion", v1.AddDatasetVersion)
 
 		// file
