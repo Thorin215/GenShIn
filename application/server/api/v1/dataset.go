@@ -190,3 +190,43 @@ func QueryAllVersions(c *gin.Context) {
 	// 返回版本列表
 	appG.Response(http.StatusOK, "成功", dataset.Versions)
 }
+
+func DeleteDataset(c *gin.Context) {
+	appG := app.Gin{C: c}
+	var body struct {
+		Owner string `json:"owner" binding:"required"`
+		Name  string `json:"name" binding:"required"`
+	}
+
+	if err := c.ShouldBindJSON(&body); err != nil {
+		appG.Response(http.StatusBadRequest, "失败", fmt.Sprintf("参数错误: %s", err.Error()))
+		return
+	}
+
+	owner := body.Owner
+	name := body.Name
+
+	if owner == "" || name == "" {
+		appG.Response(http.StatusBadRequest, "失败", "所有者和数据集名称不能为空")
+		return
+	}
+
+	// 调用链码删除数据集
+	_, err := bc.ChannelExecute("deleteDataset", [][]byte{
+		[]byte(owner),
+		[]byte(name),
+	})
+	if err != nil {
+		appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("调用智能合约出错: %s", err.Error()))
+		return
+	}
+
+	// 标注数据集已删除
+	if err := sql.MarkDeleted(owner, name); err != nil {
+		appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("数据库出错: %s", err.Error()))
+		return
+	}
+
+	// 成功响应
+	appG.Response(http.StatusOK, "成功", "")
+}

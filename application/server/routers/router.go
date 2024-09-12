@@ -31,8 +31,10 @@ func InitRouter() *gin.Engine {
 		apiV1.POST("/user/all", v1.QueryAllUsers)
 		apiV1.POST("/user/create", v1.CreateUser)
 		apiV1.POST("/user/login", v1.CheckUserLogin)
+
 		// dataset
 		apiV1.POST("/dataset/create", v1.CreateDataset)
+		apiV1.POST("/dataset/delete", v1.DeleteDataset)
 		apiV1.POST("/dataset/all", v1.QueryAllDatasets)
 		apiV1.POST("/dataset/metadata", v1.QueryDatasetMetadata)
 		apiV1.POST("/dataset/version/create", v1.AddDatasetVersion)
@@ -46,7 +48,6 @@ func InitRouter() *gin.Engine {
 		// record
 		apiV1.POST("/record/by/user", v1.QueryRecordsByUser)
 		apiV1.POST("/record/by/dataset", v1.QueryRecordsByDataset)
-
 	}
 	return r
 }

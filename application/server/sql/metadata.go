@@ -121,3 +121,11 @@ func IncrementDownloads(name string, owner string) error {
 	}
 	return nil
 }
+
+func MarkDeleted(owner string, name string) error {
+	result := DB.Model(&MetadataTable{}).Where("owner = ? AND name = ?", owner, name).Update("deleted", true)
+	if result.Error != nil {
+		return result.Error
+	}
+	return nil
+}
