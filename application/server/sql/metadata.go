@@ -1,18 +1,19 @@
 package sql
 
 import (
-	"strings"
 	"application/model"
+	"strings"
+
 	"gorm.io/gorm"
 )
 
 // MetadataBody 用于返回数据
 type MetadataBody struct {
-	Owner    string         `json:"owner"`
-	Name     string         `json:"name"`
-	Metadata model.Metadata `json:"metadata"` // 使用 Metadata 类型
-	Downloads  int    `json:"downloads"`  // 下载次数
-	Deleted    bool   `json:"deleted"`    // 是否删除
+	Owner     string         `json:"owner"`
+	Name      string         `json:"name"`
+	Metadata  model.Metadata `json:"metadata"`  // 使用 Metadata 类型
+	Downloads int            `json:"downloads"` // 下载次数
+	Deleted   bool           `json:"deleted"`   // 是否删除
 }
 
 // MetadataTable 数据库表结构
@@ -31,115 +32,90 @@ type MetadataTable struct {
 	Deleted    bool   `json:"deleted"`    // 是否删除
 }
 
-type User struct {
-	ID       string `gorm:"primaryKey"`
-	Password string
-}
-
-// MigrateMetadata 确保创建 MetadataTable 表
 func MigrateMetadata(db *gorm.DB) error {
 	err := db.AutoMigrate(&MetadataTable{})
-	if err != nil {
-		return err
-	}
-
-	err = db.AutoMigrate(&User{})
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-// CreateMetaData 插入数据
-func CreateMetaData(metadataBody *MetadataBody) error {
-    // 将 []string 转换为字符串
-    tasksStr := strings.Join(metadataBody.Metadata.Tasks, ",")
-    modalitiesStr := strings.Join(metadataBody.Metadata.Modalities, ",")
-    formatsStr := strings.Join(metadataBody.Metadata.Formats, ",")
-    subTasksStr := strings.Join(metadataBody.Metadata.SubTasks, ",")
-    languagesStr := strings.Join(metadataBody.Metadata.Languages, ",")
-    librariesStr := strings.Join(metadataBody.Metadata.Libraries, ",")
-    tagsStr := strings.Join(metadataBody.Metadata.Tags, ",")
+func CreateMetadata(metadataBody *MetadataBody) error {
+	// 将 []string 转换为字符串
+	tasksStr := strings.Join(metadataBody.Metadata.Tasks, ",")
+	modalitiesStr := strings.Join(metadataBody.Metadata.Modalities, ",")
+	formatsStr := strings.Join(metadataBody.Metadata.Formats, ",")
+	subTasksStr := strings.Join(metadataBody.Metadata.SubTasks, ",")
+	languagesStr := strings.Join(metadataBody.Metadata.Languages, ",")
+	librariesStr := strings.Join(metadataBody.Metadata.Libraries, ",")
+	tagsStr := strings.Join(metadataBody.Metadata.Tags, ",")
 
-    // 创建 MetadataTable 实例并映射 MetadataBody 的各字段
-    tableData := MetadataTable{
-        Owner:      metadataBody.Owner,
-        Name:       metadataBody.Name,
-        Tasks:      tasksStr,
-        Modalities: modalitiesStr,
-        Formats:    formatsStr,
-        SubTasks:   subTasksStr,
-        Languages:  languagesStr,
-        Libraries:  librariesStr,
-        Tags:       tagsStr,
-        License:    metadataBody.Metadata.License,
-        Downloads:  metadataBody.Downloads,  // 设置下载次数
-        Deleted:    metadataBody.Deleted,    // 设置删除标记
-    }
+	// 创建 MetadataTable 实例并映射 MetadataBody 的各字段
+	tableData := MetadataTable{
+		Owner:      metadataBody.Owner,
+		Name:       metadataBody.Name,
+		Tasks:      tasksStr,
+		Modalities: modalitiesStr,
+		Formats:    formatsStr,
+		SubTasks:   subTasksStr,
+		Languages:  languagesStr,
+		Libraries:  librariesStr,
+		Tags:       tagsStr,
+		License:    metadataBody.Metadata.License,
+		Downloads:  metadataBody.Downloads, // 设置下载次数
+		Deleted:    metadataBody.Deleted,   // 设置删除标记
+	}
 
-    // 存入数据库
-    result := DB.Create(&tableData)
-    if result.Error != nil {
-        return result.Error
-    }
-    return nil
+	// 存入数据库
+	result := DB.Create(&tableData)
+	if result.Error != nil {
+		return result.Error
+	}
+	return nil
 }
 
-// GetMetaData 从数据库获取数据
-func GetMetaData(name string, owner string) (*MetadataBody, error) {
-    var metadataTable MetadataTable
-    result := DB.Where("owner = ? AND name = ?", owner, name).First(&metadataTable)
-    if result.Error != nil {
-        if result.Error == gorm.ErrRecordNotFound {
-            return nil, nil // 记录未找到
-        }
-        return nil, result.Error // 其他错误
-    }
-
-    // 将字符串拆分为 []string
-    tasks := strings.Split(metadataTable.Tasks, ",")
-    modalities := strings.Split(metadataTable.Modalities, ",")
-    formats := strings.Split(metadataTable.Formats, ",")
-    subTasks := strings.Split(metadataTable.SubTasks, ",")
-    languages := strings.Split(metadataTable.Languages, ",")
-    libraries := strings.Split(metadataTable.Libraries, ",")
-    tags := strings.Split(metadataTable.Tags, ",")
-
-    // 将 MetadataTable 的字段映射回 Metadata
-    metadata := model.Metadata{
-        Tasks:      tasks,
-        Modalities: modalities,
-        Formats:    formats,
-        SubTasks:   subTasks,
-        Languages:  languages,
-        Libraries:  libraries,
-        Tags:       tags,
-        License:    metadataTable.License,
-    }
-
-    return &MetadataBody{
-        Owner:     metadataTable.Owner,
-        Name:      metadataTable.Name,
-        Metadata:  metadata,
-        Downloads: metadataTable.Downloads,  // 返回下载次数
-        Deleted:   metadataTable.Deleted,    // 返回删除标记
-    }, nil
-}
-
-func GetUserPassword(id string) (string, error) {
-	var user User
-	result := DB.Where("id = ?", id).First(&user)
+func GetMetadata(owner string, name string) (*MetadataBody, error) {
+	var metadataTable MetadataTable
+	result := DB.Where("owner = ? AND name = ?", owner, name).First(&metadataTable)
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
-			return "", nil
+			return nil, nil // 记录未找到
 		}
-		return "", result.Error
+		return nil, result.Error // 其他错误
 	}
-	return user.Password, nil
+
+	// 将字符串拆分为 []string
+	tasks := strings.Split(metadataTable.Tasks, ",")
+	modalities := strings.Split(metadataTable.Modalities, ",")
+	formats := strings.Split(metadataTable.Formats, ",")
+	subTasks := strings.Split(metadataTable.SubTasks, ",")
+	languages := strings.Split(metadataTable.Languages, ",")
+	libraries := strings.Split(metadataTable.Libraries, ",")
+	tags := strings.Split(metadataTable.Tags, ",")
+
+	// 将 MetadataTable 的字段映射回 Metadata
+	metadata := model.Metadata{
+		Tasks:      tasks,
+		Modalities: modalities,
+		Formats:    formats,
+		SubTasks:   subTasks,
+		Languages:  languages,
+		Libraries:  libraries,
+		Tags:       tags,
+		License:    metadataTable.License,
+	}
+
+	return &MetadataBody{
+		Owner:     metadataTable.Owner,
+		Name:      metadataTable.Name,
+		Metadata:  metadata,
+		Downloads: metadataTable.Downloads, // 返回下载次数
+		Deleted:   metadataTable.Deleted,   // 返回删除标记
+	}, nil
 }
 
-func CreateUser(user *User) error {
-	result := DB.Create(user)
+func IncrementDownloads(name string, owner string) error {
+	result := DB.Model(&MetadataTable{}).Where("owner = ? AND name = ?", owner, name).Update("downloads", gorm.Expr("downloads + ?", 1))
 	if result.Error != nil {
 		return result.Error
 	}

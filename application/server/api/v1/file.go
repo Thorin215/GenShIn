@@ -5,6 +5,7 @@ import (
 	"application/model"
 	"application/pkg/app"
 	"application/pkg/utils"
+	"application/sql"
 	"archive/zip"
 	"crypto/sha256"
 	"encoding/hex"
@@ -124,6 +125,9 @@ func DownloadFile(c *gin.Context) {
 		return
 	}
 
+	// 在数据库 Metadata 中增加 Downloads 计数
+	sql.IncrementDownloads(body.DatasetOwner, body.DatasetName)
+
 	// 上传下载记录
 	args := [][]byte{
 		[]byte(body.DatasetOwner),     // args[0]: 所有者ID | string
@@ -181,6 +185,9 @@ func DownloadFilesCompressed(c *gin.Context) {
 		appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("序列化出错: %s", err.Error()))
 		return
 	}
+
+	// 在数据库 Metadata 中增加 Downloads 计数
+	sql.IncrementDownloads(body.DatasetOwner, body.DatasetName)
 
 	// 上传下载记录
 	args := [][]byte{
