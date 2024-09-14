@@ -53,3 +53,14 @@ export function queryAllVersions(data){
     data
   })
 }
+
+export function deleteDataset(data){
+  return request({
+    url: 'http://localhost:8888/api/v1/dataset/delete',
+    method: 'post',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    data
+  })
+}

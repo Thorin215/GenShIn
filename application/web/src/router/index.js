@@ -105,6 +105,27 @@ export const asyncRoutes = [
     }
     ]
   },
+  {
+    path: '/record',
+    component: Layout,
+    redirect: '/record/all',
+    name: 'Record',
+    alwaysShow: true,
+    meta: {
+      title: '记录',
+      icon: 'new2'
+    },
+    children: [{
+      path: 'all',
+      name: 'RecordAll',
+      component: () => import('@/views/record/all/index'),
+      meta: {
+        title: '我的记录',
+        icon: 'new3'
+      }
+    }
+    ]
+  },
   // 404 page must be placed at the end !!!
   {
     path: '*',

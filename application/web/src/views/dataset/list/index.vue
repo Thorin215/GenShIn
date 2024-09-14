@@ -1,13 +1,94 @@
 <template>
   <div class="container">
-    <!-- <div class="search-bar">
-      <el-input
-        v-model="searchQuery"
-        placeholder="搜索数据集名称"
-        prefix-icon="el-icon-search"
-        @input="filteredDatasets"
-      ></el-input>
-    </div> -->
+
+    <div class="dataset-grid">
+      <el-container>
+            <div class="dataset-query">
+              <el-select v-model="taskvalue" multiple filterable boolean placeholder="请选择任务" @change = "fetchDataSets">
+                <el-option
+                    v-for="task in optionsTasks"
+                    :key="task.value"
+                    :label="task.label"
+                    :value="task.value">
+                </el-option>
+              </el-select>
+            </div>
+        <div class="dataset-query">
+          <el-select v-model="modalityvalue" multiple filterable boolean placeholder="请选择数据模态" @change = "fetchDataSets">
+            <el-option
+                v-for="modality in optionsModalities"
+                :key="modality.value"
+                :label="modality.label"
+                :value="modality.value">
+            </el-option>
+          </el-select>
+        </div>
+        <div class="dataset-query">
+          <el-select v-model="formatvalue" multiple filterable boolean placeholder="请选择文件格式" @change = "fetchDataSets">
+            <el-option
+                v-for="format in optionsFormats"
+                :key="format.value"
+                :label="format.label"
+                :value="format.value">
+            </el-option>
+          </el-select>
+        </div>
+        <div class="dataset-query">
+          <el-select v-model="subtaskvalue" multiple filterable boolean placeholder="请选择子任务" @change = "fetchDataSets">
+            <el-option
+                v-for="subtask in optionsSubTasks"
+                :key="subtask.value"
+                :label="subtask.label"
+                :value="subtask.value">
+            </el-option>
+          </el-select>
+        </div>
+        <div class="dataset-query">
+          <el-select v-model="languagevalue" multiple filterable boolean placeholder="请选择语言" @change = "fetchDataSets">
+            <el-option
+                v-for="language in optionsLanguages"
+                :key="language.value"
+                :label="language.label"
+                :value="language.value">
+            </el-option>
+          </el-select>
+        </div>
+        <div class="dataset-query">
+          <el-select v-model="libraryvalue" multiple filterable boolean placeholder="请选择适用库" @change = "fetchDataSets">
+            <el-option
+                v-for="library in optionsLibraries"
+                :key="library.value"
+                :label="library.label"
+                :value="library.value">
+            </el-option>
+          </el-select>
+        </div>
+        <div class="dataset-query">
+          <el-select v-model="tagvalue" multiple filterable boolean placeholder="请选择标签" @change = "fetchDataSets">
+            <el-option
+                v-for="tag in optionsTags"
+                :key="tag.value"
+                :label="tag.label"
+                :value="tag.value">
+            </el-option>
+          </el-select>
+        </div>
+        <div class="dataset-query">
+          <el-select v-model="licensevalue"  filterable boolean placeholder="请选择许可证" @change = "fetchDataSets">
+            <el-option
+                v-for="license in optionsLicenses"
+                :key="license.value"
+                :label="license.label"
+                :value="license.value">
+            </el-option>
+          </el-select>
+        </div>
+  
+  
+  
+      </el-container>
+      </div>
+
     <div class="dataset-grid">
       <el-card
         v-for="dataset in datasets"
@@ -89,15 +170,70 @@ export default {
       datasets: [],
       logs: [],
       metadata: {},
+      TempMetaData: {},
       dialogVisible: false,
       fileDialogVisible: false,
       metadataDialogVisible: false,
       selectedFiles: [],
       selectedDataset: null,
       searchQuery: '',
+      taskvalue: [],
+      modalityvalue: [],
+      formatvalue: [],
+      subtaskvalue: [],
+      languagevalue: [],
+      libraryvalue: [],
+      tagvalue: [],
+      licensevalue: '',
+      index:0,
+      flag: true,
+      optionsTasks: [
+        { value: '图像识别', label: '图像识别' },
+        { value: '文本摘要', label: '文本摘要' },
+        { value: '语音合成', label: '语音合成' }
+      ],
+      optionsModalities: [
+        { value: '视觉', label: '视觉' },
+        { value: '文本', label: '文本' },
+        { value: '声音', label: '声音' }
+      ],
+      optionsFormats: [
+        { value: 'PNG', label: 'PNG' },
+        { value: 'CSV', label: 'CSV' },
+        { value: 'WAV', label: 'WAV' }
+      ],
+      optionsSubTasks: [
+        { value: '面部识别', label: '面部识别' },
+        { value: '情感分析', label: '情感分析' },
+        { value: '语音到文本', label: '语音到文本' }
+      ],
+      optionsLanguages: [
+        { value: '英语', label: '英语' },
+        { value: '中文', label: '中文' },
+        { value: '法语', label: '法语' }
+      ],
+      optionsLibraries: [
+        { value: 'TensorFlow', label: 'TensorFlow' },
+        { value: 'PyTorch', label: 'PyTorch' },
+        { value: 'Keras', label: 'Keras' }
+      ],
+      optionsTags: [
+        { value: '机器学习', label: '机器学习' },
+        { value: '深度学习', label: '深度学习' },
+        { value: '自然语言处理', label: '自然语言处理' }
+      ],
+      optionsLicenses: [
+        { value: 'MIT License', label: 'MIT License' },
+        { value: 'Apache License', label: 'Apache License' },
+        { value: 'GNU General Public License (GPL)', label: 'GNU General Public License (GPL)' },
+        { value: '', label: 'No License' }
+      ]
     };
   },
   computed: {
+    data() {
+      return data
+    },
     ...mapGetters(['userId', 'userName', 'roles']),
     filteredDatasets() {
       if (!this.searchQuery) return this.datasets;
@@ -113,7 +249,23 @@ export default {
     async fetchDataSets() {
       try {
         const response = await queryAllDatasets();
-        this.datasets = response;
+                this.datasets = [];
+        for(const item of response){
+          this.TempMetaData = await queryDatasetMetadata({ owner: item.owner, name: item.name });
+          if(
+              this.taskvalue.every(it => this.TempMetaData.tasks.includes(it))
+              && this.modalityvalue.every(it1 => this.TempMetaData.modalities.includes(it1))
+              && this.formatvalue.every(it2 => this.TempMetaData.formats.includes(it2))
+              && this.subtaskvalue.every(it3 => this.TempMetaData.sub_tasks.includes(it3))
+              && this.languagevalue.every(it4 => this.TempMetaData.languages.includes(it4))
+              && this.libraryvalue.every(it5 => this.TempMetaData.libraries.includes(it5))
+              && this.tagvalue.every(it6 => this.TempMetaData.tags.includes(it6))
+              && this.TempMetaData.license === this.licensevalue
+          ){
+            this.datasets.push(item);
+          }
+        }
+        // this.datasets = response;
         console.log(this.datasets);
         this.$message.success('数据加载成功！');
       } catch (error) {
@@ -124,7 +276,7 @@ export default {
     async deleteDataset(dataset) {
       try {
         if(this.userId === dataset.owner) {
-          const reponse2 = await deleteDataset({id: dataset.id, owner: dataset.owner}); // Use your API call to delete the dataset
+          const reponse2 = await deleteDataset({name: dataset.name, owner: dataset.owner}); // Use your API call to delete the dataset
           if(reponse2 != "success") {
             this.$message.error('删除失败');
             return;
@@ -206,6 +358,11 @@ export default {
 /* .search-bar {
   margin-bottom: 20px;
 } */
+
+.dataset-query {
+  gap: 20px; /* 间距 */
+  justify-content: center;
+}
 
 
 .dataset-grid {

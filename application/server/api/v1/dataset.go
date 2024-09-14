@@ -55,22 +55,32 @@ func CreateDataset(c *gin.Context) {
 }
 
 func QueryAllDatasets(c *gin.Context) {
-	appG := app.Gin{C: c}
+    appG := app.Gin{C: c}
 
-	res, err := bc.ChannelQuery("queryAllDatasets", nil)
-	if err != nil {
-		appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("调用智能合约出错: %s", err.Error()))
-		return
-	}
+    // Query the blockchain
+    res, err := bc.ChannelQuery("queryAllDatasets", nil)
+    if err != nil {
+        appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("调用智能合约出错: %s", err.Error()))
+        return
+    }
 
-	// 反序列化 JSON
-	var datasets []model.Dataset
-	if err = json.Unmarshal(res.Payload, &datasets); err != nil {
-		appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("反序列化出错: %s", err.Error()))
-		return
-	}
+    // Deserialize the JSON response
+    var datasets []model.Dataset
+    if err = json.Unmarshal(res.Payload, &datasets); err != nil {
+        appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("反序列化出错: %s", err.Error()))
+        return
+    }
 
-	appG.Response(http.StatusOK, "成功", datasets)
+    // Filter out datasets where Deleted is true
+    var activeDatasets []model.Dataset
+    for _, dataset := range datasets {
+        if !dataset.Deleted {
+            activeDatasets = append(activeDatasets, dataset)
+        }
+    }
+
+    // Return the active datasets
+    appG.Response(http.StatusOK, "成功", activeDatasets)
 }
 
 func QueryDatasetMetadata(c *gin.Context) {

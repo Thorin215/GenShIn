@@ -1,5 +1,9 @@
 <template>
   <div class="login-container">
+    <!-- 图片元素 -->
+    <div class="header-image">
+      <img src="https://blog-pic-thorin.oss-cn-hangzhou.aliyuncs.com/ZJU-logo.svg" alt="Header Image">
+    </div>
     <el-form ref="loginForm" class="login-form" auto-complete="on" label-position="left">
       <div class="example">
         <h1 class='subtitle'>GenShIn</h1>
@@ -97,9 +101,10 @@ export default {
         checkLogin(this.loginForm).then(reponse => {
           if(reponse === '登录成功'){          
             this.$store.dispatch('user/login', this.loginForm.id).then(path => {
-            this.$router.push({ path: path })})
+              this.$router.push({ path: path })
+            })
             this.loading = false
-          }else {
+          } else {
             this.$message.error('登录失败')
           }
         }).catch(() => {
@@ -141,13 +146,25 @@ export default {
   background-size: 100% 100%;
   overflow: hidden;
 
+  // 图片容器样式
+  .header-image {
+    width: 100%;
+    text-align: center; // 居中显示图片
+    margin-bottom: 20px; // 图片和登录表单之间的间距
+  }
+
+  .header-image img {
+    max-width: 400px; // 设置图片最大宽度
+    width: 100%; // 图片宽度为容器的100%
+    height: auto; // 高度自适应
+  }
+
   .login-form {
     position: relative;
     width: 520px;
     max-width: 100%;
-    padding: 160px 35px 0;
+    padding: 0 35px;
     margin: 0 auto;
-    overflow: hidden;
   }
 
   .login-select {
@@ -169,4 +186,3 @@ export default {
   }
 }
 </style>
-
