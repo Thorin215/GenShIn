@@ -114,12 +114,21 @@ func GetMetadata(owner string, name string) (*MetadataBody, error) {
 	}, nil
 }
 
-func IncrementDownloads(name string, owner string) error {
+func IncrementDownloads(owner string, name string) error {
 	result := DB.Model(&MetadataTable{}).Where("owner = ? AND name = ?", owner, name).Update("downloads", gorm.Expr("downloads + ?", 1))
 	if result.Error != nil {
 		return result.Error
 	}
 	return nil
+}
+
+func QueryDownloads(owner string, name string) (int, error) {
+	var metadata MetadataTable
+	result := DB.Where("owner = ? AND name = ?", owner, name).First(&metadata)
+	if result.Error != nil {
+		return 0, result.Error
+	}
+	return metadata.Downloads, nil
 }
 
 func MarkDeleted(owner string, name string) error {

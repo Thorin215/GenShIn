@@ -47,6 +47,14 @@ type Dataset struct {
 	Deleted  bool      `json:"deleted"`  // 已删除
 }
 
+type DatasetEx struct {
+	Owner     string    `json:"owner"`     // 所有者ID
+	Name      string    `json:"name"`      // 数据集名
+	Versions  []Version `json:"versions"`  // 版本列表
+	Downloads int       `json:"downloads"` // 下载次数
+	Deleted   bool      `json:"deleted"`   // 已删除
+}
+
 // Record 下载记录
 type Record struct {
 	DatasetOwner string        `json:"dataset_owner"` // 数据集所有者
