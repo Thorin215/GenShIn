@@ -251,5 +251,5 @@ func DeleteDataset(c *gin.Context) {
 	}
 
 	// 成功响应
-	appG.Response(http.StatusOK, "成功", "")
+	appG.Response(http.StatusOK, "成功", "success")
 }
