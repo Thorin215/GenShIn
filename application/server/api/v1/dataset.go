@@ -55,32 +55,45 @@ func CreateDataset(c *gin.Context) {
 }
 
 func QueryAllDatasets(c *gin.Context) {
-    appG := app.Gin{C: c}
+	appG := app.Gin{C: c}
 
-    // Query the blockchain
-    res, err := bc.ChannelQuery("queryAllDatasets", nil)
-    if err != nil {
-        appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("调用智能合约出错: %s", err.Error()))
-        return
-    }
+	// Query the blockchain
+	res, err := bc.ChannelQuery("queryAllDatasets", nil)
+	if err != nil {
+		appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("调用智能合约出错: %s", err.Error()))
+		return
+	}
 
-    // Deserialize the JSON response
-    var datasets []model.Dataset
-    if err = json.Unmarshal(res.Payload, &datasets); err != nil {
-        appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("反序列化出错: %s", err.Error()))
-        return
-    }
+	// Deserialize the JSON response
+	var datasets []model.Dataset
+	if err = json.Unmarshal(res.Payload, &datasets); err != nil {
+		appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("反序列化出错: %s", err.Error()))
+		return
+	}
 
-    // Filter out datasets where Deleted is true
-    var activeDatasets []model.Dataset
-    for _, dataset := range datasets {
-        if !dataset.Deleted {
-            activeDatasets = append(activeDatasets, dataset)
-        }
-    }
+	// Filter out datasets where Deleted is true
+	var activeDatasets []model.DatasetEx
+	for _, dataset := range datasets {
+		if !dataset.Deleted {
+			// Query the database for the download count
+			downloads, err := sql.QueryDownloads(dataset.Owner, dataset.Name)
+			if err != nil {
+				appG.Response(http.StatusInternalServerError, "失败", fmt.Sprintf("数据库错误: %s", err.Error()))
+				return
+			}
+			// Append the dataset to the active datasets
+			activeDatasets = append(activeDatasets, model.DatasetEx{
+				Owner:     dataset.Owner,
+				Name:      dataset.Name,
+				Versions:  dataset.Versions,
+				Downloads: downloads,
+				Deleted:   dataset.Deleted,
+			})
+		}
+	}
 
-    // Return the active datasets
-    appG.Response(http.StatusOK, "成功", activeDatasets)
+	// Return the active datasets
+	appG.Response(http.StatusOK, "成功", activeDatasets)
 }
 
 func QueryDatasetMetadata(c *gin.Context) {
