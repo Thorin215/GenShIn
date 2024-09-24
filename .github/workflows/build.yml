@@ -23,10 +23,10 @@ jobs:
         with:
           context: application/server
           push: true
-          tags: Thorin215/fabric-genshin.server:latest
+          tags: thorin215/fabric-genshin.server:latest
       - name: Build and push application.web
         uses: docker/build-push-action@v2
         with:
           context: application/web
           push: true
-          tags: Thorin215/fabric-genshin.web:latest
+          tags: thorin215/fabric-genshin.web:latest
