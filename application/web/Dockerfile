@@ -1,9 +1,9 @@
 FROM node:16.17.1-alpine AS web
-WORKDIR /root/genshin
+WORKDIR /root/togettoyou
 COPY package*.json ./
-RUN yarn config set registry https://registry.npmmirror.com/ && yarn install
+RUN npm config set registry https://registry.npmmirror.com/ && npm install
 COPY . .
-RUN yarn run build:prod
+RUN npm run build:prod
 
 FROM nginx:stable-alpine
 COPY --from=web /root/togettoyou/dist /usr/share/nginx/html
