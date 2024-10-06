@@ -3,8 +3,6 @@ import Router from 'vue-router'
 
 Vue.use(Router)
 
-/* Layout */
-import Layout from '@/layout'
 
 /* Layout */
 import Layout from '@/layout'
