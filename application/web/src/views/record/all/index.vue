@@ -62,4 +62,16 @@ export default {
 };
 </script>
 
-
+<style scoped>
+.container {
+  padding: 20px;
+}
+.product-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.product-card {
+  width: 100%; /* 设置为100%以便适应容器 */
+}
+</style>

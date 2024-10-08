@@ -1,9 +1,6 @@
 <template>
   <div class="login-container">
     <!-- 图片元素 -->
-    <div class="header-image">
-      <img src="https://blog-pic-thorin.oss-cn-hangzhou.aliyuncs.com/ZJU-logo.svg" alt="Header Image">
-    </div>
     <el-form ref="loginForm" class="login-form" auto-complete="on" label-position="left">
       <div class="example">
         <h1 class='subtitle'>GenShIn</h1>
