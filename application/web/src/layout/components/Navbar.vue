@@ -7,7 +7,7 @@
     <div class="right-menu">
       <el-dropdown class="avatar-container" trigger="click">
         <div class="avatar-wrapper">
-          <img :src="'https://blog-pic-thorin.oss-cn-hangzhou.aliyuncs.com/d19f1a44b3a6a75260980691251b9b6.png'" class="user-avatar">
+          <img :src="'https://thorin-wang.oss-cn-hangzhou.aliyuncs.com/4b2d1e6ed0a4223a50f0bbf5e3260ca.png'" class="user-avatar">
           <i class="el-icon-caret-bottom" />
         </div>
         <el-dropdown-menu slot="dropdown" class="user-dropdown">
